@@ -1,0 +1,8 @@
+# ninja log v6
+7	237	8074984100526386	CinemaUSAC_autogen/timestamp	21766026cda7defb
+7	237	8074984100526386	C:/Users/dalio/Desktop/EDD_Fase1/build/CinemaUSAC_autogen/mocs_compilation.cpp	21766026cda7defb
+7	237	8074984100526386	CinemaUSAC_autogen/mocs_compilation.cpp	21766026cda7defb
+241	335	8074984101063253	CMakeFiles/CinemaUSAC.dir/CinemaUSAC_autogen/mocs_compilation.cpp.obj	706d30acd987d2e4
+248	2632	8074984101128954	CMakeFiles/CinemaUSAC.dir/src/main.cpp.obj	5acc738db2c03c
+7	237	8074984100526386	C:/Users/dalio/Desktop/EDD_Fase1/build/CinemaUSAC_autogen/timestamp	21766026cda7defb
+2635	2834	8074984125000013	CinemaUSAC.exe	330e262a37a6649a

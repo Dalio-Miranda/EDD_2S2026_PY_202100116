@@ -1,0 +1,14 @@
+build/
+out/
+*.o
+*.exe
+*.dll
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Reportes generados por Graphviz (se regeneran, no van a git salvo que quieras versión de ejemplo)
+reports/*.png
+reports/*.pdf
+reports/*.dot
