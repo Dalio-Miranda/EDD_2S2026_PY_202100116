@@ -44,13 +44,13 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 34,
+				"line" : 37,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 38,
+				"line" : 41,
 				"parent" : 0
 			},
 			{
@@ -172,7 +172,7 @@
 			{
 				"command" : 7,
 				"file" : 0,
-				"line" : 36,
+				"line" : 39,
 				"parent" : 0
 			}
 		]
@@ -281,18 +281,19 @@
 				1,
 				2,
 				3,
-				4
+				4,
+				5
 			]
 		}
 	],
 	"dependencies" : 
 	[
 		{
-			"backtrace" : 0,
-			"id" : "CinemaUSAC_autogen::@6890427a1f51a3e7e1df"
+			"id" : "CinemaUSAC_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
 		},
 		{
-			"id" : "CinemaUSAC_autogen_timestamp_deps::@6890427a1f51a3e7e1df"
+			"backtrace" : 0,
+			"id" : "CinemaUSAC_autogen::@6890427a1f51a3e7e1df"
 		}
 	],
 	"id" : "CinemaUSAC::@6890427a1f51a3e7e1df",
@@ -377,33 +378,36 @@
 				1,
 				2,
 				3,
-				4
+				4,
+				5
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				5,
 				6,
 				7,
 				8,
 				9,
-				10
+				10,
+				11,
+				12,
+				13
 			]
 		},
 		{
 			"name" : "",
 			"sourceIndexes" : 
 			[
-				11
+				14
 			]
 		},
 		{
 			"name" : "CMake Rules",
 			"sourceIndexes" : 
 			[
-				12
+				15
 			]
 		}
 	],
@@ -425,7 +429,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/ListaDoblePeliculas.cpp",
+			"path" : "src/ArbolBinarioPeliculas.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -442,12 +446,18 @@
 		},
 		{
 			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/ListaCircularSolicitudes.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
 			"path" : "include/Pelicula.h",
 			"sourceGroupIndex" : 1
 		},
 		{
 			"backtrace" : 1,
-			"path" : "include/ListaDoblePeliculas.h",
+			"path" : "include/ArbolBinarioPeliculas.h",
 			"sourceGroupIndex" : 1
 		},
 		{
@@ -468,6 +478,16 @@
 		{
 			"backtrace" : 1,
 			"path" : "include/ListaCircularPromociones.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/Solicitud.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "include/ListaCircularSolicitudes.h",
 			"sourceGroupIndex" : 1
 		},
 		{

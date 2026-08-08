@@ -237,14 +237,17 @@ CinemaUSAC_autogen/timestamp: \
 	C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake \
 	C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/3.30.5/CMakeRCCompiler.cmake \
 	C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/3.30.5/CMakeSystem.cmake \
+	C:/Users/dalio/Desktop/EDD_Fase1/include/ArbolBinarioPeliculas.h \
 	C:/Users/dalio/Desktop/EDD_Fase1/include/Beneficio.h \
 	C:/Users/dalio/Desktop/EDD_Fase1/include/ListaCircularPromociones.h \
+	C:/Users/dalio/Desktop/EDD_Fase1/include/ListaCircularSolicitudes.h \
 	C:/Users/dalio/Desktop/EDD_Fase1/include/ListaDobleBeneficios.h \
-	C:/Users/dalio/Desktop/EDD_Fase1/include/ListaDoblePeliculas.h \
 	C:/Users/dalio/Desktop/EDD_Fase1/include/Pelicula.h \
 	C:/Users/dalio/Desktop/EDD_Fase1/include/Promocion.h \
+	C:/Users/dalio/Desktop/EDD_Fase1/include/Solicitud.h \
+	C:/Users/dalio/Desktop/EDD_Fase1/src/ArbolBinarioPeliculas.cpp \
 	C:/Users/dalio/Desktop/EDD_Fase1/src/ListaCircularPromociones.cpp \
+	C:/Users/dalio/Desktop/EDD_Fase1/src/ListaCircularSolicitudes.cpp \
 	C:/Users/dalio/Desktop/EDD_Fase1/src/ListaDobleBeneficios.cpp \
-	C:/Users/dalio/Desktop/EDD_Fase1/src/ListaDoblePeliculas.cpp \
 	C:/Users/dalio/Desktop/EDD_Fase1/src/main.cpp \
 	C:/Qt/Tools/CMake_64/bin/cmake.exe

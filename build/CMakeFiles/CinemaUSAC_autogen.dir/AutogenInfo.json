@@ -312,6 +312,12 @@
 	"HEADERS" : 
 	[
 		[
+			"C:/Users/dalio/Desktop/EDD_Fase1/include/ArbolBinarioPeliculas.h",
+			"MU",
+			"6YEA5652QU/moc_ArbolBinarioPeliculas.cpp",
+			null
+		],
+		[
 			"C:/Users/dalio/Desktop/EDD_Fase1/include/Beneficio.h",
 			"MU",
 			"6YEA5652QU/moc_Beneficio.cpp",
@@ -324,15 +330,15 @@
 			null
 		],
 		[
-			"C:/Users/dalio/Desktop/EDD_Fase1/include/ListaDobleBeneficios.h",
+			"C:/Users/dalio/Desktop/EDD_Fase1/include/ListaCircularSolicitudes.h",
 			"MU",
-			"6YEA5652QU/moc_ListaDobleBeneficios.cpp",
+			"6YEA5652QU/moc_ListaCircularSolicitudes.cpp",
 			null
 		],
 		[
-			"C:/Users/dalio/Desktop/EDD_Fase1/include/ListaDoblePeliculas.h",
+			"C:/Users/dalio/Desktop/EDD_Fase1/include/ListaDobleBeneficios.h",
 			"MU",
-			"6YEA5652QU/moc_ListaDoblePeliculas.cpp",
+			"6YEA5652QU/moc_ListaDobleBeneficios.cpp",
 			null
 		],
 		[
@@ -345,6 +351,12 @@
 			"C:/Users/dalio/Desktop/EDD_Fase1/include/Promocion.h",
 			"MU",
 			"6YEA5652QU/moc_Promocion.cpp",
+			null
+		],
+		[
+			"C:/Users/dalio/Desktop/EDD_Fase1/include/Solicitud.h",
+			"MU",
+			"6YEA5652QU/moc_Solicitud.cpp",
 			null
 		]
 	],
@@ -420,17 +432,22 @@
 	"SOURCES" : 
 	[
 		[
+			"C:/Users/dalio/Desktop/EDD_Fase1/src/ArbolBinarioPeliculas.cpp",
+			"MU",
+			null
+		],
+		[
 			"C:/Users/dalio/Desktop/EDD_Fase1/src/ListaCircularPromociones.cpp",
 			"MU",
 			null
 		],
 		[
-			"C:/Users/dalio/Desktop/EDD_Fase1/src/ListaDobleBeneficios.cpp",
+			"C:/Users/dalio/Desktop/EDD_Fase1/src/ListaCircularSolicitudes.cpp",
 			"MU",
 			null
 		],
 		[
-			"C:/Users/dalio/Desktop/EDD_Fase1/src/ListaDoblePeliculas.cpp",
+			"C:/Users/dalio/Desktop/EDD_Fase1/src/ListaDobleBeneficios.cpp",
 			"MU",
 			null
 		],
