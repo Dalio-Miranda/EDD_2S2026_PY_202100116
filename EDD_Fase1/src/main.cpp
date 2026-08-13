@@ -2,6 +2,7 @@
 #include "ArbolBinarioPeliculas.h"
 #include "ListaCircularPromociones.h"
 #include "ListaCircularSolicitudes.h"
+#include "MatrizDispersaAsientos.h"
 
 void probarPeliculas() {
     std::cout << "\n########## PRUEBA: CARTELERA (ARBOL BINARIO DE BUSQUEDA) ##########\n" << std::endl;
@@ -129,9 +130,49 @@ void probarSolicitudes() {
     }
 }
 
+void probarMatrizAsientos() {
+    std::cout << "\n########## PRUEBA: MATRIZ DISPERSA (MAPA DE ASIENTOS) ##########\n" << std::endl;
+
+    MatrizDispersaAsientos sala;
+
+    std::cout << "Creando funcion: Avatar 3, 17:00, Sala 1, 5 filas x 8 columnas..." << std::endl;
+    sala.crearFuncion("Avatar 3", "17:00", "Sala 1", 5, 8);
+
+    sala.imprimirMapa();
+
+    std::cout << "\nReservando asientos..." << std::endl;
+    sala.reservarAsiento(2, 3, "Ale Ramirez");
+    sala.reservarAsiento(2, 4, "Jens Lopez");
+    sala.reservarAsiento(4, 1, "Jose Perez");
+    sala.reservarAsiento(5, 8, "Juan Garcia");
+
+    sala.imprimirMapa();
+
+    std::cout << "\nIntentando reservar un asiento ya ocupado (2,3)..." << std::endl;
+    bool ok = sala.reservarAsiento(2, 3, "Otro Cliente");
+    std::cout << (ok ? "Reservado." : "Rechazado: el asiento ya estaba ocupado.") << std::endl;
+
+    std::cout << "\nBuscando reservas de Jens Lopez..." << std::endl;
+    auto reservas = sala.buscarReservasDeCliente("Jens Lopez");
+    for (const auto& r : reservas) {
+        std::cout << "  Fila " << r.first << ", Columna " << r.second << std::endl;
+    }
+
+    std::cout << "\nCancelando la reserva de Ale Ramirez (2,3)..." << std::endl;
+    sala.cancelarAsiento(2, 3);
+
+    std::cout << "\nMapa final:" << std::endl;
+    sala.imprimirMapa();
+
+    std::cout << "\nCreando una NUEVA funcion (sobreescribe la anterior, segun Fase 1)..." << std::endl;
+    sala.crearFuncion("La Llorona", "20:00", "Sala 2", 4, 6);
+    sala.imprimirMapa();
+}
+
 int main() {
     probarPeliculas();
     probarPromociones();
     probarSolicitudes();
+    probarMatrizAsientos();
     return 0;
 }

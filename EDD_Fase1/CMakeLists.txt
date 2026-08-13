@@ -21,6 +21,7 @@ set(SOURCES
     src/ListaDobleBeneficios.cpp
     src/ListaCircularPromociones.cpp
     src/ListaCircularSolicitudes.cpp
+    src/MatrizDispersaAsientos.cpp
 )
 
 set(HEADERS
@@ -32,6 +33,7 @@ set(HEADERS
     include/ListaCircularPromociones.h
     include/Solicitud.h
     include/ListaCircularSolicitudes.h
+    include/MatrizDispersaAsientos.h
 )
 
 add_executable(CinemaUSAC ${SOURCES} ${HEADERS})
