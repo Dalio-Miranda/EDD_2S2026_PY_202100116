@@ -1,0 +1,11 @@
+{
+    "cmake.sourceDirectory": "C:/Users/dalio/Desktop/EDD_Fase1/EDD_Fase1",
+    "cmake.buildDirectory": "${sourceDirectory}/build",
+    "cmake.cmakePath": "C:/Qt/Tools/CMake_64/bin/cmake.exe",
+    "cmake.generator": "Ninja",
+    "cmake.configureArgs": [
+        "-DCMAKE_PREFIX_PATH=C:/Qt/6.11.1/mingw_64",
+        "-DCMAKE_MAKE_PROGRAM=C:/Qt/Tools/Ninja/ninja.exe"
+    ],
+    "cmake.configureOnOpen": true
+}

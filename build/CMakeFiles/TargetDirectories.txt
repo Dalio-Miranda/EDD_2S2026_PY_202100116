@@ -1,5 +1,0 @@
-C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/CinemaUSAC.dir
-C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/edit_cache.dir
-C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/rebuild_cache.dir
-C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/CinemaUSAC_autogen_timestamp_deps.dir
-C:/Users/dalio/Desktop/EDD_Fase1/build/CMakeFiles/CinemaUSAC_autogen.dir

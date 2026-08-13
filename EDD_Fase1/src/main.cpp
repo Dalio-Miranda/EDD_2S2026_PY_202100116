@@ -3,6 +3,7 @@
 #include "ListaCircularPromociones.h"
 #include "ListaCircularSolicitudes.h"
 #include "MatrizDispersaAsientos.h"
+#include "ReportesGraphviz.h"
 
 void probarPeliculas() {
     std::cout << "\n########## PRUEBA: CARTELERA (ARBOL BINARIO DE BUSQUEDA) ##########\n" << std::endl;
@@ -44,6 +45,9 @@ void probarPeliculas() {
 
     std::cout << "\nCartelera final (inorden):" << std::endl;
     cartelera.imprimirInorden();
+
+    std::cout << "\nGenerando reporte Graphviz de la cartelera..." << std::endl;
+    ReportesGraphviz::generarReporteCartelera(cartelera, "../reports");
 }
 
 void probarPromociones() {
@@ -95,6 +99,9 @@ void probarPromociones() {
     std::cout << "\nEliminando Promo_02..." << std::endl;
     promociones.eliminar("Promo_02");
     promociones.imprimir();
+
+    std::cout << "\nGenerando reporte Graphviz de promociones..." << std::endl;
+    ReportesGraphviz::generarReportePromociones(promociones, "../reports");
 }
 
 void probarSolicitudes() {
@@ -128,6 +135,9 @@ void probarSolicitudes() {
     for (const auto& s : encontradas) {
         std::cout << "#" << s.numero << " - " << s.tipoSolicitud << " - Estado: " << s.estado << std::endl;
     }
+
+    std::cout << "\nGenerando reporte Graphviz de solicitudes pendientes..." << std::endl;
+    ReportesGraphviz::generarReporteSolicitudes(solicitudes, "../reports");
 }
 
 void probarMatrizAsientos() {
@@ -163,6 +173,9 @@ void probarMatrizAsientos() {
 
     std::cout << "\nMapa final:" << std::endl;
     sala.imprimirMapa();
+
+    std::cout << "\nGenerando reporte Graphviz de la matriz de asientos..." << std::endl;
+    ReportesGraphviz::generarReporteMatrizAsientos(sala, "../reports");
 
     std::cout << "\nCreando una NUEVA funcion (sobreescribe la anterior, segun Fase 1)..." << std::endl;
     sala.crearFuncion("La Llorona", "20:00", "Sala 2", 4, 6);

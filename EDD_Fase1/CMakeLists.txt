@@ -22,6 +22,7 @@ set(SOURCES
     src/ListaCircularPromociones.cpp
     src/ListaCircularSolicitudes.cpp
     src/MatrizDispersaAsientos.cpp
+    src/ReportesGraphviz.cpp
 )
 
 set(HEADERS
@@ -34,6 +35,7 @@ set(HEADERS
     include/Solicitud.h
     include/ListaCircularSolicitudes.h
     include/MatrizDispersaAsientos.h
+    include/ReportesGraphviz.h
 )
 
 add_executable(CinemaUSAC ${SOURCES} ${HEADERS})
