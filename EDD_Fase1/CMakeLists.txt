@@ -17,6 +17,7 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 # Archivos fuente del proyecto
 set(SOURCES
     src/main.cpp
+    src/MainWindow.cpp
     src/ArbolBinarioPeliculas.cpp
     src/ListaDobleBeneficios.cpp
     src/ListaCircularPromociones.cpp
@@ -26,6 +27,7 @@ set(SOURCES
 )
 
 set(HEADERS
+    include/MainWindow.h
     include/Pelicula.h
     include/ArbolBinarioPeliculas.h
     include/Beneficio.h
