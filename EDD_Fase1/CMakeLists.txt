@@ -18,6 +18,10 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 set(SOURCES
     src/main.cpp
     src/MainWindow.cpp
+    src/PanelAdministrador.cpp
+    src/PanelAdminPeliculas.cpp
+    src/PanelAdminPromociones.cpp
+    src/PanelAdminSolicitudes.cpp
     src/ArbolBinarioPeliculas.cpp
     src/ListaDobleBeneficios.cpp
     src/ListaCircularPromociones.cpp
@@ -28,6 +32,10 @@ set(SOURCES
 
 set(HEADERS
     include/MainWindow.h
+    include/PanelAdministrador.h
+    include/PanelAdminPeliculas.h
+    include/PanelAdminPromociones.h
+    include/PanelAdminSolicitudes.h
     include/Pelicula.h
     include/ArbolBinarioPeliculas.h
     include/Beneficio.h

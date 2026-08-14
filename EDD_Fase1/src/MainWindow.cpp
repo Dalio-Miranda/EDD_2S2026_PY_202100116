@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include "PanelAdministrador.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -10,17 +11,19 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
 
     setWindowTitle("CinemaUSAC - Fase 1");
-    resize(900, 650);
+    resize(1000, 700);
 
     pilaPantallas = new QStackedWidget(this);
     setCentralWidget(pilaPantallas);
 
-    // Por ahora los paneles de Admin y Cliente son placeholders;
-    // se van a ir reemplazando por las pantallas reales con cada
-    // funcionalidad (gestion de peliculas, promociones, etc).
+    PanelAdministrador* panelAdmin = new PanelAdministrador(cartelera, promociones, solicitudes, matrizAsientos);
+    connect(panelAdmin, &PanelAdministrador::solicitudVolver, this, [this]() {
+        pilaPantallas->setCurrentIndex(INICIO);
+    });
+
     pilaPantallas->addWidget(crearPantallaInicio());               // indice 0: INICIO
-    pilaPantallas->addWidget(crearPlaceholder("Panel Administrador (en construccion)")); // indice 1: ADMIN
-    pilaPantallas->addWidget(crearPlaceholder("Panel Cliente (en construccion)"));       // indice 2: CLIENTE
+    pilaPantallas->addWidget(panelAdmin);                          // indice 1: ADMIN
+    pilaPantallas->addWidget(crearPlaceholder("Panel Cliente (en construccion)")); // indice 2: CLIENTE
 
     pilaPantallas->setCurrentIndex(INICIO);
 }
