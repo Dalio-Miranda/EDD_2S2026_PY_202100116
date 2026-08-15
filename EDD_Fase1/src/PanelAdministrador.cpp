@@ -2,6 +2,7 @@
 #include "PanelAdminPeliculas.h"
 #include "PanelAdminPromociones.h"
 #include "PanelAdminSolicitudes.h"
+#include "PanelAdminFunciones.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -37,14 +38,8 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
     pestanas->addTab(new PanelAdminPeliculas(cartelera), "Peliculas");
     pestanas->addTab(new PanelAdminPromociones(promociones), "Promociones");
     pestanas->addTab(new PanelAdminSolicitudes(solicitudes), "Solicitudes");
-
-    QLabel* placeholderFunciones = new QLabel("Funciones y Mapa de Asientos (proximamente)");
-    placeholderFunciones->setAlignment(Qt::AlignCenter);
-    pestanas->addTab(placeholderFunciones, "Funciones y Asientos");
+    pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos");
 
     layoutPrincipal->addLayout(layoutSuperior);
     layoutPrincipal->addWidget(pestanas);
-
-    // Silenciar warnings de parametros no usados todavia en este constructor.
-    (void)matrizAsientos;
 }

@@ -22,6 +22,7 @@ set(SOURCES
     src/PanelAdminPeliculas.cpp
     src/PanelAdminPromociones.cpp
     src/PanelAdminSolicitudes.cpp
+    src/PanelAdminFunciones.cpp
     src/ArbolBinarioPeliculas.cpp
     src/ListaDobleBeneficios.cpp
     src/ListaCircularPromociones.cpp
@@ -36,6 +37,7 @@ set(HEADERS
     include/PanelAdminPeliculas.h
     include/PanelAdminPromociones.h
     include/PanelAdminSolicitudes.h
+    include/PanelAdminFunciones.h
     include/Pelicula.h
     include/ArbolBinarioPeliculas.h
     include/Beneficio.h
