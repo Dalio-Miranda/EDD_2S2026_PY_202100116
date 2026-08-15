@@ -23,6 +23,12 @@ set(SOURCES
     src/PanelAdminPromociones.cpp
     src/PanelAdminSolicitudes.cpp
     src/PanelAdminFunciones.cpp
+    src/PanelCliente.cpp
+    src/PanelClienteCartelera.cpp
+    src/PanelClienteAsientos.cpp
+    src/PanelClienteCancelarReserva.cpp
+    src/PanelClientePromociones.cpp
+    src/PanelClienteSolicitudes.cpp
     src/ArbolBinarioPeliculas.cpp
     src/ListaDobleBeneficios.cpp
     src/ListaCircularPromociones.cpp
@@ -38,6 +44,12 @@ set(HEADERS
     include/PanelAdminPromociones.h
     include/PanelAdminSolicitudes.h
     include/PanelAdminFunciones.h
+    include/PanelCliente.h
+    include/PanelClienteCartelera.h
+    include/PanelClienteAsientos.h
+    include/PanelClienteCancelarReserva.h
+    include/PanelClientePromociones.h
+    include/PanelClienteSolicitudes.h
     include/Pelicula.h
     include/ArbolBinarioPeliculas.h
     include/Beneficio.h

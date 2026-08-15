@@ -1,5 +1,6 @@
 #include "MainWindow.h"
 #include "PanelAdministrador.h"
+#include "PanelCliente.h"
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -21,9 +22,14 @@ MainWindow::MainWindow(QWidget* parent)
         pilaPantallas->setCurrentIndex(INICIO);
     });
 
-    pilaPantallas->addWidget(crearPantallaInicio());               // indice 0: INICIO
-    pilaPantallas->addWidget(panelAdmin);                          // indice 1: ADMIN
-    pilaPantallas->addWidget(crearPlaceholder("Panel Cliente (en construccion)")); // indice 2: CLIENTE
+    PanelCliente* panelCliente = new PanelCliente(cartelera, promociones, solicitudes, matrizAsientos);
+    connect(panelCliente, &PanelCliente::solicitudVolver, this, [this]() {
+        pilaPantallas->setCurrentIndex(INICIO);
+    });
+
+    pilaPantallas->addWidget(crearPantallaInicio());  // indice 0: INICIO
+    pilaPantallas->addWidget(panelAdmin);             // indice 1: ADMIN
+    pilaPantallas->addWidget(panelCliente);           // indice 2: CLIENTE
 
     pilaPantallas->setCurrentIndex(INICIO);
 }

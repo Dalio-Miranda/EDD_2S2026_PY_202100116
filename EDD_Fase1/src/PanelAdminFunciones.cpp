@@ -15,6 +15,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QFont>
+#include <QShowEvent>
 #include <vector>
 
 // Recolecta las peliculas de la cartelera (recorrido inorden) para
@@ -60,6 +61,11 @@ PanelAdminFunciones::PanelAdminFunciones(MatrizDispersaAsientos& matrizRef, Arbo
 
     connect(botonCrear, &QPushButton::clicked, this, &PanelAdminFunciones::onCrearFuncion);
     connect(botonReporte, &QPushButton::clicked, this, &PanelAdminFunciones::onGenerarReporte);
+}
+
+void PanelAdminFunciones::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    dibujarGrilla(); // refresca por si el cliente reservo/cancelo mientras tanto
 }
 
 void PanelAdminFunciones::limpiarGrilla() {

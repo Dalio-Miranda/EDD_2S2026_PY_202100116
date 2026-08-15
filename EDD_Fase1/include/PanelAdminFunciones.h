@@ -18,6 +18,9 @@ class PanelAdminFunciones : public QWidget {
 public:
     PanelAdminFunciones(MatrizDispersaAsientos& matrizRef, ArbolBinarioPeliculas& carteleraRef, QWidget* parent = nullptr);
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 private slots:
     void onCrearFuncion();
     void onGenerarReporte();
