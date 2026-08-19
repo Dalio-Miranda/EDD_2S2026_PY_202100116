@@ -34,8 +34,10 @@ PanelAdminFunciones::PanelAdminFunciones(MatrizDispersaAsientos& matrizRef, Arbo
 
     QHBoxLayout* layoutBotones = new QHBoxLayout();
     QPushButton* botonCrear = new QPushButton("Crear Funcion");
+    QPushButton* botonEliminar = new QPushButton("Eliminar Funcion");
     QPushButton* botonReporte = new QPushButton("Generar Reporte Graphviz");
     layoutBotones->addWidget(botonCrear);
+    layoutBotones->addWidget(botonEliminar);
     layoutBotones->addWidget(botonReporte);
     layoutBotones->addStretch();
 
@@ -60,6 +62,7 @@ PanelAdminFunciones::PanelAdminFunciones(MatrizDispersaAsientos& matrizRef, Arbo
     layoutPrincipal->addWidget(scroll);
 
     connect(botonCrear, &QPushButton::clicked, this, &PanelAdminFunciones::onCrearFuncion);
+    connect(botonEliminar, &QPushButton::clicked, this, &PanelAdminFunciones::onEliminarFuncion);
     connect(botonReporte, &QPushButton::clicked, this, &PanelAdminFunciones::onGenerarReporte);
 }
 
@@ -95,7 +98,6 @@ void PanelAdminFunciones::dibujarGrilla() {
     int filas = matriz.getNumFilas();
     int columnas = matriz.getNumColumnas();
 
-    // Encabezados de columna
     for (int c = 1; c <= columnas; c++) {
         QLabel* etiqueta = new QLabel(QString::number(c));
         etiqueta->setAlignment(Qt::AlignCenter);
@@ -201,6 +203,25 @@ void PanelAdminFunciones::onCrearFuncion() {
 
         dibujarGrilla();
         QMessageBox::information(this, "Funcion creada", "La funcion se creo correctamente.");
+    }
+}
+
+void PanelAdminFunciones::onEliminarFuncion() {
+    if (!matriz.existeFuncion()) {
+        QMessageBox::information(this, "Sin funcion", "No hay ninguna funcion activa para eliminar.");
+        return;
+    }
+
+    auto respuesta = QMessageBox::question(this, "Confirmar eliminacion",
+        QString("Deseas eliminar la funcion activa (%1 - %2 - %3)?\n\nSe perderan todas sus reservas.")
+            .arg(QString::fromStdString(matriz.getPelicula()))
+            .arg(QString::fromStdString(matriz.getHorario()))
+            .arg(QString::fromStdString(matriz.getSala())));
+
+    if (respuesta == QMessageBox::Yes) {
+        matriz.eliminarFuncion();
+        dibujarGrilla();
+        QMessageBox::information(this, "Funcion eliminada", "La funcion se elimino correctamente.");
     }
 }
 

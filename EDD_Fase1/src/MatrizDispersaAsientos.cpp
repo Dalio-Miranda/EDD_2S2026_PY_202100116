@@ -65,6 +65,16 @@ void MatrizDispersaAsientos::crearFuncion(const std::string& nuevaPelicula,
     funcionCreada = true;
 }
 
+void MatrizDispersaAsientos::eliminarFuncion() {
+    // A diferencia de crearFuncion(), aqui no se reemplaza por una
+    // funcion nueva: el sistema queda sin ninguna funcion activa.
+    liberarTodo();
+    pelicula.clear();
+    horario.clear();
+    sala.clear();
+    funcionCreada = false;
+}
+
 NodoAsiento* MatrizDispersaAsientos::buscarEnFila(int fila, int columna) const {
     if (fila < 1 || fila > numFilas) return nullptr;
 
@@ -176,7 +186,6 @@ void MatrizDispersaAsientos::imprimirMapa() const {
                << getTotalLibres() << " libres, "
                << getTotalAsientos() << " total\n" << std::endl;
 
-    // Encabezado de columnas
     std::cout << "     ";
     for (int c = 1; c <= numColumnas; c++) {
         std::cout << std::setw(4) << c;

@@ -51,6 +51,11 @@ public:
     void crearFuncion(const std::string& pelicula, const std::string& horario,
                        const std::string& sala, int filas, int columnas);
 
+    // Elimina la funcion activa por completo (libera toda su memoria
+    // y deja el sistema sin ninguna funcion creada), sin reemplazarla
+    // por una nueva. Distinto de crearFuncion(), que sobreescribe.
+    void eliminarFuncion();
+
     // Reserva un asiento. Retorna false si esta fuera de rango o ya ocupado.
     bool reservarAsiento(int fila, int columna, const std::string& nombreCliente);
 

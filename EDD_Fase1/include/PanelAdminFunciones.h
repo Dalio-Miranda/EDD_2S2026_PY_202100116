@@ -23,6 +23,7 @@ protected:
 
 private slots:
     void onCrearFuncion();
+    void onEliminarFuncion();
     void onGenerarReporte();
     void onClickAsiento(int fila, int columna);
 
