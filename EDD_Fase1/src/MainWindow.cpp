@@ -7,6 +7,33 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QFont>
+#include <QPixmap>
+#include <QPainter>
+#include <QPaintEvent>
+
+// Widget con marca de agua: dibuja el logo de la USAC bien tenue,
+// centrado y escalado, detras de todo el contenido normal de la
+// pantalla de inicio (titulo, subtitulo, botones).
+namespace {
+class PantallaInicioWidget : public QWidget {
+public:
+    QPixmap fondo;
+
+protected:
+    void paintEvent(QPaintEvent* event) override {
+        QWidget::paintEvent(event);
+        if (fondo.isNull()) return;
+
+        QPainter painter(this);
+        painter.setOpacity(0.10); // marca de agua sutil, no debe tapar el texto
+
+        QPixmap escalado = fondo.scaled(size() * 0.8, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        int x = (width() - escalado.width()) / 2;
+        int y = (height() - escalado.height()) / 2;
+        painter.drawPixmap(x, y, escalado);
+    }
+};
+} // namespace
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
@@ -35,14 +62,17 @@ MainWindow::MainWindow(QWidget* parent)
 }
 
 QWidget* MainWindow::crearPantallaInicio() {
-    QWidget* pantalla = new QWidget();
+    PantallaInicioWidget* pantalla = new PantallaInicioWidget();
+    pantalla->fondo = QPixmap("../assets/usac_logo.png");
+
     QVBoxLayout* layout = new QVBoxLayout(pantalla);
     layout->setAlignment(Qt::AlignCenter);
-    layout->setSpacing(20);
+    layout->setSpacing(14);
 
     QLabel* titulo = new QLabel("CinemaUSAC");
+    titulo->setObjectName("tituloApp");
     QFont fuenteTitulo = titulo->font();
-    fuenteTitulo.setPointSize(28);
+    fuenteTitulo.setPointSize(32);
     fuenteTitulo.setBold(true);
     titulo->setFont(fuenteTitulo);
     titulo->setAlignment(Qt::AlignCenter);
@@ -50,13 +80,24 @@ QWidget* MainWindow::crearPantallaInicio() {
     QLabel* subtitulo = new QLabel("Sistema de gestion de cine");
     subtitulo->setAlignment(Qt::AlignCenter);
 
+    QLabel* nombreEstudiante = new QLabel("Dalio Miranda - Carne 202100116");
+    QFont fuenteNombre = nombreEstudiante->font();
+    fuenteNombre.setPointSize(9);
+    fuenteNombre.setItalic(true);
+    nombreEstudiante->setFont(fuenteNombre);
+    nombreEstudiante->setStyleSheet("color: #9aa0a6;");
+    nombreEstudiante->setAlignment(Qt::AlignCenter);
+
     QPushButton* botonAdmin = new QPushButton("Ingresar como Administrador");
     QPushButton* botonCliente = new QPushButton("Ingresar como Cliente");
-    botonAdmin->setMinimumSize(250, 45);
-    botonCliente->setMinimumSize(250, 45);
+    botonAdmin->setObjectName("botonEntrada");
+    botonCliente->setObjectName("botonEntrada");
+    botonAdmin->setMinimumSize(280, 50);
+    botonCliente->setMinimumSize(280, 50);
 
     layout->addWidget(titulo);
     layout->addWidget(subtitulo);
+    layout->addWidget(nombreEstudiante);
     layout->addSpacing(30);
     layout->addWidget(botonAdmin, 0, Qt::AlignCenter);
     layout->addWidget(botonCliente, 0, Qt::AlignCenter);

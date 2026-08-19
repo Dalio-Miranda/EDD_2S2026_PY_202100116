@@ -9,6 +9,7 @@
 #include <QTabWidget>
 #include <QPushButton>
 #include <QLabel>
+#include <QFont>
 
 PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
                                         ListaCircularPromociones& promociones,
@@ -21,6 +22,7 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
 
     QHBoxLayout* layoutSuperior = new QHBoxLayout();
     QLabel* titulo = new QLabel("Panel Administrador");
+    titulo->setObjectName("tituloPanel");
     QFont fuenteTitulo = titulo->font();
     fuenteTitulo.setPointSize(16);
     fuenteTitulo.setBold(true);

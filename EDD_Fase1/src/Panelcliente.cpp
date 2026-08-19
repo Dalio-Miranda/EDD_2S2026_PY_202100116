@@ -23,6 +23,7 @@ PanelCliente::PanelCliente(ArbolBinarioPeliculas& cartelera,
 
     QHBoxLayout* layoutSuperior = new QHBoxLayout();
     QLabel* titulo = new QLabel("Panel Cliente");
+    titulo->setObjectName("tituloPanel");
     QFont fuenteTitulo = titulo->font();
     fuenteTitulo.setPointSize(16);
     fuenteTitulo.setBold(true);
