@@ -1,56 +1,82 @@
 # CinemaUSAC - Fase 1
 
-Proyecto de Estructuras de Datos - USAC. Sistema de gestión de cine implementando
-estructuras de datos dinámicas manuales en C++ con interfaz gráfica en Qt6.
+Sistema de gestión de cine desarrollado en C++17 con interfaz gráfica en Qt6,
+como proyecto del curso de Estructuras de Datos - USAC.
+
+**Estudiante:** Dalio Miranda — Carné 202100116
 
 ## Estructura del proyecto
 
 ```
 EDD_Fase1/
 ├── CMakeLists.txt          # Configuración de build
+├── assets/                 # Recursos graficos (logo USAC, etc.)
 ├── src/                    # Archivos .cpp
-│   └── main.cpp
-├── include/                # Archivos .h (una clase por estructura)
+├── include/                # Archivos .h
 ├── data/                   # CSV de prueba para carga masiva
 ├── reports/                # Salida de los .dot / .png de Graphviz
 ├── docs/
-│   └── documentacion/      # Manual técnico (Markdown o PDF)
+│   └── documentacion/      # Manual técnico + capturas
+│       ├── manual_tecnico.md
+│       └── capturas/
 └── .gitignore
 ```
 
 ## Requisitos
 
-- Qt 6.x (componente Widgets), instalado con MinGW 64-bit
-- CMake 3.16+
+- Qt 6.11+ (componente Widgets), instalado con MinGW 64-bit
+- CMake 3.16+ con generador Ninja
 - Graphviz instalado y accesible en el PATH (comando `dot`)
-- Compilador MinGW (viene con el instalador de Qt)
+- Compilador MinGW (GCC, viene con el instalador de Qt / MSYS2)
 
 ## Cómo compilar (VS Code + CMake Tools)
 
 1. Abrí la carpeta `EDD_Fase1` en VS Code.
-2. `Ctrl+Shift+P` → `CMake: Configure`. Si no detecta Qt automáticamente,
-   agregá esto en `.vscode/settings.json`:
-   ```json
-   {
-     "cmake.configureArgs": [
-       "-DCMAKE_PREFIX_PATH=C:/Qt/6.7.0/mingw_64"
-     ]
-   }
-   ```
-   (ajustá la ruta según donde instalaste Qt).
-3. Seleccioná el kit **MinGW** cuando te lo pida.
+2. `Ctrl+Shift+P` → `CMake: Configure`.
+3. Seleccioná el kit **GCC/MinGW** cuando te lo pida.
 4. `Ctrl+Shift+P` → `CMake: Build`.
-5. Ejecutá el `.exe` generado en `build/`.
+5. Ejecutá el `CinemaUSAC.exe` generado en `build/`.
 
-## Estado actual
+## Estructuras de datos implementadas (manual, sin STL)
 
-- [x] Esqueleto del proyecto
-- [ ] Lista doblemente enlazada (cartelera de películas)
-- [ ] Carga masiva CSV
-- [ ] Algoritmo de búsqueda por código
-- [ ] Lista circular simple (promociones) + lista doble anidada (beneficios)
-- [ ] Lista circular doblemente enlazada (solicitudes)
-- [ ] Matriz dispersa (mapa de asientos)
-- [ ] Reportes Graphviz (4)
-- [ ] GUI Qt completa
-- [ ] Manual técnico
+- **Árbol Binario de Búsqueda** — Cartelera de películas, ordenada por código, con recorrido Inorden.
+- **Lista Circular de Listas** — Promociones (lista circular simple) con beneficios anidados (lista doblemente enlazada por promoción).
+- **Lista Circular Doblemente Enlazada** — Solicitudes especiales de clientes.
+- **Matriz Dispersa** (listas ortogonales fila/columna) — Mapa de asientos por función.
+
+## Funcionalidades
+
+### Panel Administrador
+- Gestión de películas: agregar, eliminar, carga masiva CSV, alertas de "próximo a retirar"
+- Gestión de promociones y sus beneficios
+- Gestión de solicitudes: aprobar (en proceso/atendida) o rechazar
+- Crear funciones y visualizar/gestionar el mapa de asientos
+
+### Panel Cliente
+- Consultar cartelera completa o buscar por código
+- Reservar asientos sobre la función activa
+- Cancelar reservas propias
+- Consultar promociones vigentes según la fecha actual
+- Registrar solicitudes especiales y consultar su estado por teléfono
+
+### Reportes Graphviz
+Los 4 reportes gráficos (uno por estructura) se generan en tiempo real desde
+cada pestaña correspondiente, con botón "Generar Reporte Graphviz".
+
+## Estado del proyecto
+
+- [x] Árbol Binario de Búsqueda (cartelera)
+- [x] Lista circular de listas (promociones + beneficios)
+- [x] Lista circular doblemente enlazada (solicitudes)
+- [x] Matriz dispersa (mapa de asientos)
+- [x] Reportes Graphviz (4/4)
+- [x] Panel Administrador (4 pestañas)
+- [x] Panel Cliente (5 pestañas)
+- [x] Interfaz gráfica con estilo personalizado
+- [x] Manual técnico con documentación y capturas
+
+## Documentación técnica
+
+Ver [`docs/documentacion/manual_tecnico.md`](docs/documentacion/manual_tecnico.md)
+para el detalle de diseño de cada estructura, justificación de algoritmos,
+arquitectura de la aplicación y capturas del sistema en funcionamiento.
