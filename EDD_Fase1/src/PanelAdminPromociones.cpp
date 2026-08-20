@@ -43,6 +43,7 @@ PanelAdminPromociones::PanelAdminPromociones(ListaCircularPromociones& promocion
     tablaPromociones->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tablaPromociones->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tablaPromociones->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tablaPromociones->setSortingEnabled(true);
 
     QLabel* labelBeneficios = new QLabel("Beneficios de la promocion seleccionada:");
     tablaBeneficios = new QTableWidget(this);
@@ -74,11 +75,15 @@ QString PanelAdminPromociones::codigoSeleccionado() const {
 }
 
 void PanelAdminPromociones::actualizarTablaPromociones() {
+    tablaPromociones->setSortingEnabled(false);
     tablaPromociones->setRowCount(0);
     tablaBeneficios->setRowCount(0);
 
     NodoPromocion* primero = promociones.getPrimero();
-    if (primero == nullptr) return;
+    if (primero == nullptr) {
+        tablaPromociones->setSortingEnabled(true);
+        return;
+    }
 
     int total = promociones.getTamanio();
     NodoPromocion* actual = primero;
@@ -101,6 +106,8 @@ void PanelAdminPromociones::actualizarTablaPromociones() {
 
         actual = actual->siguiente;
     }
+
+    tablaPromociones->setSortingEnabled(true);
 }
 
 void PanelAdminPromociones::actualizarTablaBeneficios(const QString& codigoPromocion) {
@@ -169,6 +176,13 @@ void PanelAdminPromociones::onAgregarPromocion() {
     if (dialogo.exec() == QDialog::Accepted) {
         if (campoCodigo->text().trimmed().isEmpty() || campoNombre->text().trimmed().isEmpty()) {
             QMessageBox::warning(this, "Datos incompletos", "El codigo y el nombre son obligatorios.");
+            return;
+        }
+
+        // Validacion: la fecha de fin debe ser posterior a la de inicio.
+        if (campoFechaFin->date() <= campoFechaInicio->date()) {
+            QMessageBox::warning(this, "Fechas invalidas",
+                "La fecha de fin de la promocion debe ser posterior a la fecha de inicio.");
             return;
         }
 

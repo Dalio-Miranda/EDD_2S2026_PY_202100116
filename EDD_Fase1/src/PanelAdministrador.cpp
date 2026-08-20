@@ -3,6 +3,7 @@
 #include "PanelAdminPromociones.h"
 #include "PanelAdminSolicitudes.h"
 #include "PanelAdminFunciones.h"
+#include "PanelReportes.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -41,6 +42,7 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
     pestanas->addTab(new PanelAdminPromociones(promociones), "Promociones");
     pestanas->addTab(new PanelAdminSolicitudes(solicitudes), "Solicitudes");
     pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos");
+    pestanas->addTab(new PanelReportes(cartelera, solicitudes, promociones, matrizAsientos), "Reportes");
 
     layoutPrincipal->addLayout(layoutSuperior);
     layoutPrincipal->addWidget(pestanas);

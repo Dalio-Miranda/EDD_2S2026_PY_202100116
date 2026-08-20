@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QIcon>
 #include "MainWindow.h"
 
 // Hoja de estilos global (QSS, funciona como CSS) para darle a
@@ -150,6 +151,11 @@ QDialog {
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setStyleSheet(HOJA_DE_ESTILOS);
+
+    // Icono de la aplicacion (barra de titulo, alt-tab). Reutilizamos
+    // el logo de la USAC ya usado como marca de agua en la pantalla
+    // de inicio, para mantener consistencia visual.
+    app.setWindowIcon(QIcon("../assets/usac_logo.png"));
 
     MainWindow ventana;
     ventana.show();

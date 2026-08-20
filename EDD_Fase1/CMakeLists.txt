@@ -10,11 +10,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Busca el paquete de Qt6 (Widgets para la interfaz gráfica).
-# Por ahora la prueba de la lista de películas corre en consola,
-# pero dejamos Qt enganchado para cuando conectemos la GUI.
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-# Archivos fuente del proyecto
 set(SOURCES
     src/main.cpp
     src/MainWindow.cpp
@@ -23,6 +20,7 @@ set(SOURCES
     src/PanelAdminPromociones.cpp
     src/PanelAdminSolicitudes.cpp
     src/PanelAdminFunciones.cpp
+    src/PanelReportes.cpp
     src/PanelCliente.cpp
     src/PanelClienteCartelera.cpp
     src/PanelClienteAsientos.cpp
@@ -44,6 +42,7 @@ set(HEADERS
     include/PanelAdminPromociones.h
     include/PanelAdminSolicitudes.h
     include/PanelAdminFunciones.h
+    include/PanelReportes.h
     include/PanelCliente.h
     include/PanelClienteCartelera.h
     include/PanelClienteAsientos.h

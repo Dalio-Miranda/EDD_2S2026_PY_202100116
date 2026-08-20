@@ -76,6 +76,7 @@ PanelAdminPeliculas::PanelAdminPeliculas(ArbolBinarioPeliculas& carteleraRef, QW
     tabla->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tabla->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tabla->setSortingEnabled(true); // clic en un encabezado ordena por esa columna
 
     layoutPrincipal->addLayout(layoutBotones);
     layoutPrincipal->addWidget(tabla);
@@ -105,6 +106,10 @@ void PanelAdminPeliculas::actualizarTabla() {
     std::vector<Pelicula> peliculas;
     recolectarInorden(cartelera.getRaiz(), peliculas);
 
+    // Desactivamos el ordenamiento visual mientras llenamos la tabla,
+    // para que no interfiera con el orden en que insertamos las filas
+    // (si no, con setSortingEnabled activo se puede confundir Qt).
+    tabla->setSortingEnabled(false);
     tabla->setRowCount(static_cast<int>(peliculas.size()));
 
     for (int fila = 0; fila < static_cast<int>(peliculas.size()); fila++) {
@@ -130,6 +135,8 @@ void PanelAdminPeliculas::actualizarTabla() {
         }
         tabla->setItem(fila, 8, itemEstado);
     }
+
+    tabla->setSortingEnabled(true);
 }
 
 void PanelAdminPeliculas::onAgregarPelicula() {
@@ -175,6 +182,14 @@ void PanelAdminPeliculas::onAgregarPelicula() {
     if (dialogo.exec() == QDialog::Accepted) {
         if (campoCodigo->text().trimmed().isEmpty() || campoTitulo->text().trimmed().isEmpty()) {
             QMessageBox::warning(this, "Datos incompletos", "El codigo y el titulo son obligatorios.");
+            return;
+        }
+
+        // Validacion: la fecha de fin de cartelera debe ser posterior
+        // a la fecha de estreno, para evitar datos inconsistentes.
+        if (campoFechaFin->date() <= campoFechaEstreno->date()) {
+            QMessageBox::warning(this, "Fechas invalidas",
+                "La fecha de fin de cartelera debe ser posterior a la fecha de estreno.");
             return;
         }
 
