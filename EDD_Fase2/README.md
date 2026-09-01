@@ -121,6 +121,15 @@ pero ya no se califica).
   (buckets ocupados, colisiones) para el Reporte 4. Probado con
   fuzzing (5000 operaciones intercaladas vs `std::unordered_map` como
   referencia) + ASan/UBSan.
+- **GestorAsientosPorFuncion** (`include/GestorAsientosPorFuncion.h`)
+  — orquesta el ciclo de vida de la Matriz Dispersa por funcion: la
+  carga/vacia segun la funcion activa, persistiendo automaticamente a
+  su `F00X_funcion.json` antes de cambiar de funcion y despues de
+  cada reserva/cancelacion. NO modifica `MatrizDispersaAsientos` (la
+  implementacion interna de Fase 1 se reutiliza intacta, tal como
+  pide el enunciado). Probado con archivos reales en disco, incluido
+  el caso critico de cambiar de funcion activa sin perder datos, +
+  ASan/UBSan.
 
 ### Modelos de datos nuevos
 
@@ -139,13 +148,12 @@ pero ya no se califica).
 
 ### Pendiente
 
-- Integracion de la Matriz Dispersa con el nuevo ciclo de vida por
-  funcion (cargar/vaciar activa, persistir antes de cambiar).
 - Persistencia JSON completa (carga masiva de peliculas+funciones y
   de clientes+reservas) y validaciones de datos.
 - Nuevos paneles de UI: gestion de funciones (AVL), gestion de
   clientes (Arbol B), reservar/cancelar/historial de cliente sobre
-  las nuevas estructuras.
+  las nuevas estructuras (usando `GestorAsientosPorFuncion` para el
+  mapa de asientos).
 - Reportes Graphviz de las 3 estructuras nuevas (AVL, Arbol B, Tabla
   Hash) mas el reporte especifico de la matriz dispersa por funcion.
 - Manual tecnico y manual de usuario de Fase 2 en

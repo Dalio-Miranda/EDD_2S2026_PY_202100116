@@ -38,7 +38,7 @@ protected:
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent) {
 
-    setWindowTitle("CinemaUSAC - Fase 1");
+    setWindowTitle("CinemaUSAC - Fase 2");
     resize(1000, 700);
 
     pilaPantallas = new QStackedWidget(this);

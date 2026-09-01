@@ -41,6 +41,7 @@ set(SOURCES
     src/ArbolAVLFunciones.cpp
     src/ArbolBClientes.cpp
     src/TablaHashReservas.cpp
+    src/GestorAsientosPorFuncion.cpp
 
     # --- Pendientes de Fase 2, se agregan aqui cuando esten listos ---
     # src/PersistenciaJSON.cpp
@@ -79,6 +80,7 @@ set(HEADERS
     include/ArbolAVLFunciones.h
     include/ArbolBClientes.h
     include/TablaHashReservas.h
+    include/GestorAsientosPorFuncion.h
 
     # --- Pendientes de Fase 2, se agregan aqui cuando esten listos ---
     # include/PersistenciaJSON.h
