@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <vector>
+#include "ArregloDinamico.h"
 
 ArbolBinarioPeliculas::ArbolBinarioPeliculas()
     : raiz(nullptr), tamanio(0) {}
@@ -19,10 +19,11 @@ void ArbolBinarioPeliculas::liberar(NodoArbolPelicula* nodo) {
     delete nodo;
 }
 
-void ArbolBinarioPeliculas::insertar(const Pelicula& p) {
+bool ArbolBinarioPeliculas::insertar(const Pelicula& p) {
     bool insertado = false;
     raiz = insertarRec(raiz, p, insertado);
     if (insertado) tamanio++;
+    return insertado;
 }
 
 NodoArbolPelicula* ArbolBinarioPeliculas::insertarRec(NodoArbolPelicula* nodo, const Pelicula& p, bool& insertado) {
@@ -117,14 +118,14 @@ NodoArbolPelicula* ArbolBinarioPeliculas::eliminarRec(NodoArbolPelicula* nodo, c
     return nodo;
 }
 
-// Separa una linea de CSV por comas en un vector de campos.
-static std::vector<std::string> separarLinea(const std::string& linea, char delimitador) {
-    std::vector<std::string> campos;
+// Separa una linea de CSV por comas en un ArregloDinamico de campos.
+static ArregloDinamico<std::string> separarLinea(const std::string& linea, char delimitador) {
+    ArregloDinamico<std::string> campos;
     std::stringstream ss(linea);
     std::string campo;
 
     while (std::getline(ss, campo, delimitador)) {
-        campos.push_back(campo);
+        campos.agregarFinal(campo);
     }
     return campos;
 }
@@ -148,9 +149,9 @@ int ArbolBinarioPeliculas::cargarDesdeCSV(const std::string& rutaArchivo) {
             continue; // saltamos el encabezado
         }
 
-        std::vector<std::string> campos = separarLinea(linea, ',');
+        ArregloDinamico<std::string> campos = separarLinea(linea, ',');
 
-        if (campos.size() < 8) {
+        if (campos.getTamanio() < 8) {
             std::cerr << "Linea CSV invalida (se ignora): " << linea << std::endl;
             continue;
         }
@@ -210,4 +211,45 @@ bool ArbolBinarioPeliculas::estaVacia() const {
 
 NodoArbolPelicula* ArbolBinarioPeliculas::getRaiz() const {
     return raiz;
+}
+
+// ------------------------------- recorridos --------------------------------
+
+void ArbolBinarioPeliculas::preordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const {
+    if (nodo == nullptr) return;
+    salida.agregarFinal(nodo->dato);
+    preordenRec(nodo->izquierdo, salida);
+    preordenRec(nodo->derecho, salida);
+}
+
+void ArbolBinarioPeliculas::inordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const {
+    if (nodo == nullptr) return;
+    inordenRec(nodo->izquierdo, salida);
+    salida.agregarFinal(nodo->dato);
+    inordenRec(nodo->derecho, salida);
+}
+
+void ArbolBinarioPeliculas::postordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const {
+    if (nodo == nullptr) return;
+    postordenRec(nodo->izquierdo, salida);
+    postordenRec(nodo->derecho, salida);
+    salida.agregarFinal(nodo->dato);
+}
+
+ArregloDinamico<Pelicula> ArbolBinarioPeliculas::listarPeliculas(TipoRecorrido tipo) const {
+    ArregloDinamico<Pelicula> salida;
+
+    switch (tipo) {
+        case TipoRecorrido::PREORDEN:
+            preordenRec(raiz, salida);
+            break;
+        case TipoRecorrido::INORDEN:
+            inordenRec(raiz, salida);
+            break;
+        case TipoRecorrido::POSTORDEN:
+            postordenRec(raiz, salida);
+            break;
+    }
+
+    return salida;
 }

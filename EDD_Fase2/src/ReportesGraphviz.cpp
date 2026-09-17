@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
-#include <vector>
+#include "ArregloDinamico.h"
 
 namespace ReportesGraphviz {
 
@@ -122,7 +122,7 @@ void generarReporteSolicitudes(const ListaCircularSolicitudes& solicitudes, cons
     dot << "    node [shape=circle, style=filled, fillcolor=\"#FFF3B0\", fontname=\"Arial\", fontsize=9];\n";
 
     // Reunimos solo las solicitudes en estado "Pendiente".
-    std::vector<int> numerosPendientes;
+    ArregloDinamico<int> numerosPendientes;
     NodoSolicitud* primero = solicitudes.getPrimero();
 
     if (primero != nullptr) {
@@ -135,7 +135,7 @@ void generarReporteSolicitudes(const ListaCircularSolicitudes& solicitudes, cons
                     << "\\nCliente: " << escapar(s.nombreCliente)
                     << "\\nTipo: " << s.tipoSolicitud
                     << "\\nEstado: " << s.estado << "\"];\n";
-                numerosPendientes.push_back(s.numero);
+                numerosPendientes.agregarFinal(s.numero);
             }
             actual = actual->siguiente;
         }
@@ -143,15 +143,15 @@ void generarReporteSolicitudes(const ListaCircularSolicitudes& solicitudes, cons
 
     // Conectamos las pendientes en un ciclo bidireccional, para
     // representar visualmente el caracter circular de la lista.
-    for (size_t i = 0; i < numerosPendientes.size(); i++) {
+    for (int i = 0; i < numerosPendientes.getTamanio(); i++) {
         int actualNum = numerosPendientes[i];
-        int siguienteNum = numerosPendientes[(i + 1) % numerosPendientes.size()];
-        if (numerosPendientes.size() > 1) {
+        int siguienteNum = numerosPendientes[(i + 1) % numerosPendientes.getTamanio()];
+        if (numerosPendientes.getTamanio() > 1) {
             dot << "    \"S" << actualNum << "\" -> \"S" << siguienteNum << "\" [dir=both];\n";
         }
     }
 
-    dot << "    label=\"Total de solicitudes pendientes: " << numerosPendientes.size() << "\";\n";
+    dot << "    label=\"Total de solicitudes pendientes: " << numerosPendientes.getTamanio() << "\";\n";
     dot << "    labelloc=\"t\";\n";
     dot << "}\n";
 
@@ -290,6 +290,245 @@ void generarReporteMatrizAsientos(const MatrizDispersaAsientos& matriz, const st
     dot << "}\n";
 
     ejecutarDot(dot.str(), carpetaReportes + "/reporte4_matriz_asientos");
+}
+
+// ===================== Reporte: Arbol AVL de Funciones =====================
+
+// "Ya realizada" se aproxima comparando el horario (hora del dia) de
+// la funcion contra la hora actual: el modelo de datos de Funcion no
+// guarda una fecha propia (solo horario tipo "17:00"), asi que se
+// asume que la funcion se repite diariamente a esa hora.
+static bool horarioYaPaso(const std::string& horario) {
+    int horaFuncion = 0, minutoFuncion = 0;
+    if (std::sscanf(horario.c_str(), "%d:%d", &horaFuncion, &minutoFuncion) != 2) {
+        return false; // horario invalido: no marcar como realizada
+    }
+
+    std::time_t ahora = std::time(nullptr);
+    std::tm* t = std::localtime(&ahora);
+
+    if (t->tm_hour != horaFuncion) return t->tm_hour > horaFuncion;
+    return t->tm_min > minutoFuncion;
+}
+
+static void escribirNodoAVL(NodoAVL* nodo, std::ostringstream& dot) {
+    if (nodo == nullptr) return;
+
+    const Funcion& f = nodo->dato;
+    bool yaRealizada = horarioYaPaso(f.horario);
+    std::string color = yaRealizada ? "#F4A6A6" : "#8BE28B"; // rojo : verde
+
+    dot << "    \"" << f.codigoFuncion << "\" [label=\"" << f.codigoFuncion
+        << "\\n" << escapar(f.codigoPelicula)
+        << "\\n" << f.horario
+        << "\\n" << escapar(f.sala) << "\", fillcolor=\"" << color << "\"];\n";
+
+    if (nodo->izquierdo != nullptr) {
+        dot << "    \"" << f.codigoFuncion << "\" -> \"" << nodo->izquierdo->dato.codigoFuncion << "\";\n";
+        escribirNodoAVL(nodo->izquierdo, dot);
+    }
+    if (nodo->derecho != nullptr) {
+        dot << "    \"" << f.codigoFuncion << "\" -> \"" << nodo->derecho->dato.codigoFuncion << "\";\n";
+        escribirNodoAVL(nodo->derecho, dot);
+    }
+}
+
+void generarReporteFunciones(const ArbolAVLFunciones& arbol, const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    dot << "digraph Funciones {\n";
+    dot << "    rankdir=TB;\n";
+    dot << "    node [shape=circle, style=filled, fontname=\"Arial\", fontsize=9];\n";
+
+    if (arbol.getRaiz() != nullptr) {
+        escribirNodoAVL(arbol.getRaiz(), dot);
+    } else {
+        dot << "    vacio [label=\"No hay funciones registradas\", shape=plaintext];\n";
+    }
+
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_funciones_avl");
+}
+
+// ===================== Reporte: Arbol B de Clientes =====================
+
+// Genera un id de nodo unico dentro del .dot (los clientes ya tienen
+// id propio, pero un nodo del Arbol B contiene VARIAS claves, asi que
+// necesita su propio identificador de nodo, no el id de un cliente).
+static void escribirNodoB(NodoB* nodo, bool esRaiz, int& contador, std::ostringstream& dot) {
+    if (nodo == nullptr) return;
+
+    std::string idNodo = "nodoB" + std::to_string(contador++);
+
+    // Registro (record) con un compartimento por clave, tal como pide
+    // el enunciado ("caja dividida en compartimentos").
+    std::ostringstream etiqueta;
+    etiqueta << "{";
+    for (int i = 0; i < nodo->claves.getTamanio(); i++) {
+        if (i > 0) etiqueta << "|";
+        etiqueta << nodo->claves[i].id;
+    }
+    etiqueta << "}";
+
+    std::string color = esRaiz ? "#9EC1FF" : (nodo->esHoja ? "#FFF3B0" : "#B7E4C7");
+
+    dot << "    \"" << idNodo << "\" [shape=record, style=filled, fillcolor=\"" << color
+        << "\", label=\"" << etiqueta.str() << "\"];\n";
+
+    for (NodoB* hijo : nodo->hijos) {
+        int idHijo = contador;
+        escribirNodoB(hijo, false, contador, dot);
+        dot << "    \"" << idNodo << "\" -> \"nodoB" << idHijo << "\";\n";
+    }
+}
+
+void generarReporteClientes(const ArbolBClientes& arbol, const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    dot << "digraph Clientes {\n";
+    dot << "    rankdir=TB;\n";
+    dot << "    node [fontname=\"Arial\", fontsize=9];\n";
+
+    if (arbol.getRaiz() != nullptr) {
+        int contador = 0;
+        escribirNodoB(arbol.getRaiz(), true, contador, dot);
+    } else {
+        dot << "    vacio [label=\"No hay clientes registrados\", shape=plaintext];\n";
+    }
+
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_clientes_arbolb");
+}
+
+// ===================== Reporte: Tabla Hash de Reservas =====================
+
+void generarReporteReservas(const TablaHashReservas& tabla, const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    dot << "digraph Reservas {\n";
+    dot << "    rankdir=LR;\n";
+    dot << "    node [fontname=\"Arial\", fontsize=9];\n";
+
+    int tamanioTabla = tabla.getTamanioTabla();
+
+    for (int i = 0; i < tamanioTabla; i++) {
+        NodoHash* cabeza = tabla.getBucket(i);
+        std::string colorBucket = (cabeza == nullptr) ? "#D9D9D9" : "#FFE066";
+
+        dot << "    \"bucket" << i << "\" [shape=box, style=filled, fillcolor=\"" << colorBucket
+            << "\", label=\"Bucket " << i << "\"];\n";
+
+        std::string idAnterior = "\"bucket" + std::to_string(i) + "\"";
+        NodoHash* actual = cabeza;
+        while (actual != nullptr) {
+            const Reserva& r = actual->dato;
+            std::string idNodo = "\"r_" + r.codigoReserva + "\"";
+
+            dot << "    " << idNodo << " [shape=box, label=\"" << r.codigoReserva
+                << "\\n" << escapar(r.idCliente) << " -> " << r.codigoFuncion << "\"];\n";
+            dot << "    " << idAnterior << " -> " << idNodo << ";\n";
+
+            idAnterior = idNodo;
+            actual = actual->siguiente;
+        }
+    }
+
+    dot << "    labelloc=\"t\";\n";
+    dot << "    label=\"Tamanio: " << tamanioTabla
+        << " | Reservas: " << tabla.getCantidadReservas()
+        << " | Buckets ocupados: " << tabla.contarBucketsOcupados()
+        << " | Colisiones: " << tabla.contarColisiones() << "\";\n";
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_reservas_hash");
+}
+
+// ============== Reporte: Matriz Dispersa por Funcion (Fase 2) ==============
+
+void generarReporteMatrizAsientosPorFuncion(GestorAsientosPorFuncion& gestor,
+                                             TablaHashReservas& reservas,
+                                             ArbolBClientes& clientes,
+                                             const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    dot << "digraph MatrizAsientosFuncion {\n";
+    dot << "    rankdir=TB;\n";
+    dot << "    node [fontname=\"Arial\", fontsize=9];\n";
+
+    if (!gestor.hayFuncionActiva()) {
+        dot << "    vacio [label=\"Ninguna funcion activa\", shape=plaintext];\n";
+        dot << "}\n";
+        ejecutarDot(dot.str(), carpetaReportes + "/reporte_matriz_asientos_funcion");
+        return;
+    }
+
+    MatrizDispersaAsientos& matriz = gestor.getMatrizActiva();
+    std::string codigoFuncion = gestor.getCodigoFuncionActiva();
+
+    int filas = matriz.getNumFilas();
+    int columnas = matriz.getNumColumnas();
+
+    dot << "    \"Funcion\" [shape=diamond, style=filled, fillcolor=\"#CDEAC0\", "
+        << "label=\"Funcion: " << escapar(codigoFuncion)
+        << "\\n" << escapar(matriz.getPelicula())
+        << " - " << matriz.getHorario() << "\\n" << escapar(matriz.getSala()) << "\"];\n";
+
+    dot << "    { rank=same; ";
+    for (int c = 1; c <= columnas; c++) dot << "\"col" << c << "\"; ";
+    dot << "}\n";
+    for (int c = 1; c <= columnas; c++) {
+        dot << "    \"col" << c << "\" [shape=box, style=filled, fillcolor=\"#FFE066\", label=\"Col " << c << "\"];\n";
+    }
+    dot << "    \"Funcion\" -> \"col1\";\n";
+    for (int c = 1; c < columnas; c++) {
+        dot << "    \"col" << c << "\" -> \"col" << (c + 1) << "\";\n";
+    }
+
+    for (int f = 1; f <= filas; f++) {
+        dot << "    \"fila" << f << "\" [shape=box, style=filled, fillcolor=\"#FFE066\", label=\"Fila " << f << "\"];\n";
+    }
+    dot << "    \"Funcion\" -> \"fila1\";\n";
+    for (int f = 1; f < filas; f++) {
+        dot << "    \"fila" << f << "\" -> \"fila" << (f + 1) << "\";\n";
+    }
+
+    for (int f = 1; f <= filas; f++) {
+        NodoAsiento* actual = matriz.getCabeceraFila(f);
+        std::string idAnteriorFila = "\"fila" + std::to_string(f) + "\"";
+        while (actual != nullptr) {
+            // El nodo guarda el codigo_reserva (no el nombre
+            // directamente, ver GestorAsientosPorFuncion); se sigue
+            // esa referencia hasta la Tabla Hash y de ahi hasta el
+            // Arbol B para mostrar el nombre real del cliente, tal
+            // como describe el enunciado, sin duplicar datos.
+            std::string codigoReserva = actual->nombreCliente;
+            std::string etiqueta = codigoReserva;
+
+            Reserva* r = reservas.buscar(codigoReserva);
+            if (r != nullptr) {
+                Cliente* c = clientes.buscar(r->idCliente);
+                if (c != nullptr) {
+                    etiqueta = c->nombre + "\\n(" + codigoReserva + ")";
+                }
+            }
+
+            std::string idValor = "\"asiento_" + std::to_string(actual->fila) + "_" + std::to_string(actual->columna) + "\"";
+            dot << "    " << idValor << " [shape=circle, style=filled, fillcolor=\"#F4A6A6\", label=\""
+                << escapar(etiqueta) << "\"];\n";
+
+            dot << "    " << idAnteriorFila << " -> " << idValor << " [dir=both];\n";
+            dot << "    \"col" << actual->columna << "\" -> " << idValor << " [dir=both];\n";
+
+            idAnteriorFila = idValor;
+            actual = actual->siguienteEnFila;
+        }
+    }
+
+    dot << "    labelloc=\"b\";\n";
+    dot << "    label=\"Reservados: " << matriz.getTotalReservados()
+        << " | Libres: " << matriz.getTotalLibres()
+        << " | Total: " << matriz.getTotalAsientos() << "\";\n";
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_matriz_asientos_funcion");
 }
 
 } // namespace ReportesGraphviz

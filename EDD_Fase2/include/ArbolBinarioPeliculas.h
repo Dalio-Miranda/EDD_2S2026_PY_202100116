@@ -3,6 +3,8 @@
 
 #include <string>
 #include "Pelicula.h"
+#include "ArregloDinamico.h"
+#include "TipoRecorrido.h"
 
 // Nodo del arbol binario de busqueda (BST).
 // Cada nodo tiene un hijo izquierdo (codigos menores) y un hijo
@@ -40,7 +42,9 @@ public:
     ArbolBinarioPeliculas();
     ~ArbolBinarioPeliculas();
 
-    void insertar(const Pelicula& p);
+    // Retorna true si se inserto un codigo nuevo; false si el codigo
+    // ya existia (en ese caso ACTUALIZA los datos en vez de duplicar).
+    bool insertar(const Pelicula& p);
     bool eliminar(const std::string& codigo);
     Pelicula* buscar(const std::string& codigo);
 
@@ -48,6 +52,10 @@ public:
 
     // Recorrido inorden: imprime la cartelera ordenada por codigo.
     void imprimirInorden() const;
+
+    // Listado con el recorrido solicitado (enunciado 4.2, "Gestionar
+    // peliculas": preorden, inorden y postorden).
+    ArregloDinamico<Pelicula> listarPeliculas(TipoRecorrido tipo) const;
 
     int getTamanio() const;
     bool estaVacia() const;
@@ -62,6 +70,10 @@ private:
     Pelicula* buscarRec(NodoArbolPelicula* nodo, const std::string& codigo) const;
     void imprimirInordenRec(NodoArbolPelicula* nodo) const;
     void liberar(NodoArbolPelicula* nodo);
+
+    void preordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const;
+    void inordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const;
+    void postordenRec(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& salida) const;
 };
 
 #endif // ARBOL_BINARIO_PELICULAS_H

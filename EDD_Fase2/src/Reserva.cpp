@@ -14,8 +14,6 @@ void to_json(nlohmann::json& j, const Reserva& r) {
 void from_json(const nlohmann::json& j, Reserva& r) {
     j.at("codigo_reserva").get_to(r.codigoReserva);
     j.at("codigo_funcion").get_to(r.codigoFuncion);
-    // id_cliente puede no venir en el JSON de asientos de la funcion
-    // (F00X_funcion.json), que solo trae codigo_reserva/fila/columna.
     r.idCliente = j.value("id_cliente", std::string(""));
     j.at("fila").get_to(r.fila);
     j.at("columna").get_to(r.columna);

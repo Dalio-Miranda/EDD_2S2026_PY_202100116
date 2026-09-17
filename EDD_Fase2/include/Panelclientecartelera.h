@@ -5,6 +5,7 @@
 #include <QTableWidget>
 #include <QLineEdit>
 #include "ArbolBinarioPeliculas.h"
+#include "ArregloDinamico.h"
 
 // Pestana de cliente: consultar toda la cartelera o buscar una
 // pelicula puntual por codigo usando la busqueda del BST.
@@ -23,7 +24,7 @@ private:
     QLineEdit* campoBusqueda;
     QTableWidget* tabla;
 
-    void mostrarPeliculas(const std::vector<Pelicula>& peliculas);
+    void mostrarPeliculas(const ArregloDinamico<Pelicula>& peliculas);
 };
 
 #endif // PANEL_CLIENTE_CARTELERA_H

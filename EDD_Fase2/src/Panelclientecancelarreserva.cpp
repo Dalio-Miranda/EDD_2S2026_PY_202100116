@@ -51,14 +51,14 @@ void PanelClienteCancelarReserva::onBuscarReservas() {
     }
 
     auto reservas = matriz.buscarReservasDeCliente(nombre.toStdString());
-    tabla->setRowCount(static_cast<int>(reservas.size()));
+    tabla->setRowCount(reservas.getTamanio());
 
-    for (int i = 0; i < static_cast<int>(reservas.size()); i++) {
+    for (int i = 0; i < reservas.getTamanio(); i++) {
         tabla->setItem(i, 0, new QTableWidgetItem(QString::number(reservas[i].first)));
         tabla->setItem(i, 1, new QTableWidgetItem(QString::number(reservas[i].second)));
     }
 
-    if (reservas.empty()) {
+    if (reservas.estaVacio()) {
         QMessageBox::information(this, "Sin reservas", "No se encontraron reservas activas a tu nombre.");
     }
 }

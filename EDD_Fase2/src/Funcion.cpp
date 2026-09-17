@@ -17,8 +17,5 @@ void from_json(const nlohmann::json& j, Funcion& f) {
     j.at("sala").get_to(f.sala);
     j.at("filas").get_to(f.filas);
     j.at("columnas").get_to(f.columnas);
-
-    // archivo_asientos es opcional en el JSON de carga masiva (inicia
-    // vacio segun el enunciado), por eso no usamos at() aqui.
     f.archivoAsientos = j.value("archivo_asientos", std::string(""));
 }

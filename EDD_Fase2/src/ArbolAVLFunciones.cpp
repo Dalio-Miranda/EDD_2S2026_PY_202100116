@@ -14,8 +14,6 @@ void ArbolAVLFunciones::liberar(NodoAVL* nodo) {
     delete nodo;
 }
 
-// ------------------------- helpers de balanceo -------------------------
-
 int ArbolAVLFunciones::altura(NodoAVL* nodo) const {
     return nodo == nullptr ? 0 : nodo->altura;
 }
@@ -39,7 +37,7 @@ NodoAVL* ArbolAVLFunciones::rotacionDerecha(NodoAVL* y) {
     actualizarAltura(y);
     actualizarAltura(x);
 
-    return x; // x es la nueva raiz de este subarbol
+    return x;
 }
 
 NodoAVL* ArbolAVLFunciones::rotacionIzquierda(NodoAVL* x) {
@@ -52,36 +50,30 @@ NodoAVL* ArbolAVLFunciones::rotacionIzquierda(NodoAVL* x) {
     actualizarAltura(x);
     actualizarAltura(y);
 
-    return y; // y es la nueva raiz de este subarbol
+    return y;
 }
 
 NodoAVL* ArbolAVLFunciones::balancear(NodoAVL* nodo) {
     actualizarAltura(nodo);
     int balance = factorBalance(nodo);
 
-    // Caso Izquierda-Izquierda
     if (balance > 1 && factorBalance(nodo->izquierdo) >= 0) {
         return rotacionDerecha(nodo);
     }
-    // Caso Izquierda-Derecha
     if (balance > 1 && factorBalance(nodo->izquierdo) < 0) {
         nodo->izquierdo = rotacionIzquierda(nodo->izquierdo);
         return rotacionDerecha(nodo);
     }
-    // Caso Derecha-Derecha
     if (balance < -1 && factorBalance(nodo->derecho) <= 0) {
         return rotacionIzquierda(nodo);
     }
-    // Caso Derecha-Izquierda
     if (balance < -1 && factorBalance(nodo->derecho) > 0) {
         nodo->derecho = rotacionDerecha(nodo->derecho);
         return rotacionIzquierda(nodo);
     }
 
-    return nodo; // ya estaba balanceado
+    return nodo;
 }
-
-// ------------------------------ insertar ------------------------------
 
 NodoAVL* ArbolAVLFunciones::insertarRec(NodoAVL* nodo, const Funcion& f, bool& insertado) {
     if (nodo == nullptr) {
@@ -94,7 +86,6 @@ NodoAVL* ArbolAVLFunciones::insertarRec(NodoAVL* nodo, const Funcion& f, bool& i
     } else if (f.codigoFuncion > nodo->dato.codigoFuncion) {
         nodo->derecho = insertarRec(nodo->derecho, f, insertado);
     } else {
-        // codigo_funcion duplicado: no se inserta.
         insertado = false;
         return nodo;
     }
@@ -108,8 +99,6 @@ bool ArbolAVLFunciones::insertar(const Funcion& f) {
     if (insertado) tamanio++;
     return insertado;
 }
-
-// ------------------------------ eliminar ------------------------------
 
 NodoAVL* ArbolAVLFunciones::encontrarMinimo(NodoAVL* nodo) const {
     NodoAVL* actual = nodo;
@@ -130,17 +119,13 @@ NodoAVL* ArbolAVLFunciones::eliminarRec(NodoAVL* nodo, const std::string& codigo
     } else if (codigo > nodo->dato.codigoFuncion) {
         nodo->derecho = eliminarRec(nodo->derecho, codigo, eliminado);
     } else {
-        // Nodo encontrado: caso con 0 o 1 hijo
         if (nodo->izquierdo == nullptr || nodo->derecho == nullptr) {
             NodoAVL* hijo = (nodo->izquierdo != nullptr) ? nodo->izquierdo : nodo->derecho;
             delete nodo;
             eliminado = true;
-            return hijo; // puede ser nullptr (nodo hoja)
+            return hijo;
         }
 
-        // Caso con 2 hijos: reemplazar con el sucesor inorden
-        // (el minimo del subarbol derecho), y eliminar ese sucesor
-        // de su posicion original.
         NodoAVL* sucesor = encontrarMinimo(nodo->derecho);
         nodo->dato = sucesor->dato;
 
@@ -160,21 +145,15 @@ bool ArbolAVLFunciones::eliminar(const std::string& codigoFuncion) {
     return eliminado;
 }
 
-// ------------------------------- editar --------------------------------
-
 bool ArbolAVLFunciones::editar(const std::string& codigoFuncion, const Funcion& datosNuevos) {
     NodoAVL* nodo = buscarRec(raiz, codigoFuncion);
     if (nodo == nullptr) return false;
 
-    // La clave (codigo_funcion) no cambia; solo se actualizan los
-    // demas campos, preservando la posicion del nodo en el arbol.
     Funcion actualizado = datosNuevos;
     actualizado.codigoFuncion = codigoFuncion;
     nodo->dato = actualizado;
     return true;
 }
-
-// ------------------------------ busqueda --------------------------------
 
 NodoAVL* ArbolAVLFunciones::buscarRec(NodoAVL* nodo, const std::string& codigo) const {
     if (nodo == nullptr) return nullptr;
@@ -196,32 +175,29 @@ int ArbolAVLFunciones::getTamanio() const { return tamanio; }
 bool ArbolAVLFunciones::estaVacio() const { return raiz == nullptr; }
 NodoAVL* ArbolAVLFunciones::getRaiz() const { return raiz; }
 
-// ------------------------------ recorridos -------------------------------
-
-void ArbolAVLFunciones::preordenRec(NodoAVL* nodo, std::vector<Funcion>& salida) const {
+void ArbolAVLFunciones::preordenRec(NodoAVL* nodo, ArregloDinamico<Funcion>& salida) const {
     if (nodo == nullptr) return;
-    salida.push_back(nodo->dato);
+    salida.agregarFinal(nodo->dato);
     preordenRec(nodo->izquierdo, salida);
     preordenRec(nodo->derecho, salida);
 }
 
-void ArbolAVLFunciones::inordenRec(NodoAVL* nodo, std::vector<Funcion>& salida) const {
+void ArbolAVLFunciones::inordenRec(NodoAVL* nodo, ArregloDinamico<Funcion>& salida) const {
     if (nodo == nullptr) return;
     inordenRec(nodo->izquierdo, salida);
-    salida.push_back(nodo->dato);
+    salida.agregarFinal(nodo->dato);
     inordenRec(nodo->derecho, salida);
 }
 
-void ArbolAVLFunciones::postordenRec(NodoAVL* nodo, std::vector<Funcion>& salida) const {
+void ArbolAVLFunciones::postordenRec(NodoAVL* nodo, ArregloDinamico<Funcion>& salida) const {
     if (nodo == nullptr) return;
     postordenRec(nodo->izquierdo, salida);
     postordenRec(nodo->derecho, salida);
-    salida.push_back(nodo->dato);
+    salida.agregarFinal(nodo->dato);
 }
 
-std::vector<Funcion> ArbolAVLFunciones::listarFunciones(TipoRecorrido tipo) const {
-    std::vector<Funcion> salida;
-    salida.reserve(tamanio);
+ArregloDinamico<Funcion> ArbolAVLFunciones::listarFunciones(TipoRecorrido tipo) const {
+    ArregloDinamico<Funcion> salida;
 
     switch (tipo) {
         case TipoRecorrido::PREORDEN:

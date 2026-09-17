@@ -1,6 +1,11 @@
 #include "Cliente.h"
 
 void to_json(nlohmann::json& j, const Cliente& c) {
+    nlohmann::json codigos = nlohmann::json::array();
+    for (const std::string& codigo : c.codigosReserva) {
+        codigos.push_back(codigo);
+    }
+
     j = nlohmann::json{
         {"id", c.id},
         {"nombre", c.nombre},
@@ -8,7 +13,7 @@ void to_json(nlohmann::json& j, const Cliente& c) {
         {"telefono", c.telefono},
         {"password", c.password},
         {"tipo", c.tipo},
-        {"codigos_reserva", c.codigosReserva}
+        {"codigos_reserva", codigos}
     };
 }
 
@@ -19,5 +24,11 @@ void from_json(const nlohmann::json& j, Cliente& c) {
     j.at("telefono").get_to(c.telefono);
     j.at("password").get_to(c.password);
     c.tipo = j.value("tipo", std::string("cliente"));
-    c.codigosReserva = j.value("codigos_reserva", std::vector<std::string>{});
+
+    c.codigosReserva = ArregloDinamico<std::string>();
+    if (j.contains("codigos_reserva")) {
+        for (const auto& item : j.at("codigos_reserva")) {
+            c.codigosReserva.agregarFinal(item.get<std::string>());
+        }
+    }
 }

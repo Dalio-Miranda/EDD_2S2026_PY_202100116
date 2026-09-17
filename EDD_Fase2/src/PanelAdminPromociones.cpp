@@ -93,9 +93,9 @@ void PanelAdminPromociones::actualizarTablaPromociones() {
         const Promocion& p = actual->dato;
 
         QString dias;
-        for (size_t i = 0; i < p.diasAplicables.size(); i++) {
+        for (int i = 0; i < p.diasAplicables.getTamanio(); i++) {
             dias += QString::fromStdString(p.diasAplicables[i]);
-            if (i + 1 < p.diasAplicables.size()) dias += ", ";
+            if (i + 1 < p.diasAplicables.getTamanio()) dias += ", ";
         }
 
         tablaPromociones->setItem(fila, 0, new QTableWidgetItem(QString::fromStdString(p.codigo)));
@@ -194,7 +194,7 @@ void PanelAdminPromociones::onAgregarPromocion() {
 
         for (int i = 0; i < 7; i++) {
             if (dias[i]->isChecked()) {
-                p.diasAplicables.push_back(nombresDias[i].toStdString());
+                p.diasAplicables.agregarFinal(nombresDias[i].toStdString());
             }
         }
 

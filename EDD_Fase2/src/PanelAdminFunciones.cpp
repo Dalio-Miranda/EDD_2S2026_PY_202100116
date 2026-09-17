@@ -16,14 +16,14 @@
 #include <QUrl>
 #include <QFont>
 #include <QShowEvent>
-#include <vector>
+#include "ArregloDinamico.h"
 
 // Recolecta las peliculas de la cartelera (recorrido inorden) para
 // llenar el combo de seleccion al crear una funcion.
-static void recolectarPeliculasLocal(NodoArbolPelicula* nodo, std::vector<Pelicula>& resultado) {
+static void recolectarPeliculasLocal(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& resultado) {
     if (nodo == nullptr) return;
     recolectarPeliculasLocal(nodo->izquierdo, resultado);
-    resultado.push_back(nodo->dato);
+    resultado.agregarFinal(nodo->dato);
     recolectarPeliculasLocal(nodo->derecho, resultado);
 }
 
@@ -147,10 +147,10 @@ void PanelAdminFunciones::onClickAsiento(int fila, int columna) {
 }
 
 void PanelAdminFunciones::onCrearFuncion() {
-    std::vector<Pelicula> peliculas;
+    ArregloDinamico<Pelicula> peliculas;
     recolectarPeliculasLocal(cartelera.getRaiz(), peliculas);
 
-    if (peliculas.empty()) {
+    if (peliculas.estaVacio()) {
         QMessageBox::warning(this, "Sin peliculas", "Primero agrega peliculas a la cartelera.");
         return;
     }

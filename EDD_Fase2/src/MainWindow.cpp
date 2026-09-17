@@ -44,12 +44,14 @@ MainWindow::MainWindow(QWidget* parent)
     pilaPantallas = new QStackedWidget(this);
     setCentralWidget(pilaPantallas);
 
-    PanelAdministrador* panelAdmin = new PanelAdministrador(cartelera, promociones, solicitudes, matrizAsientos);
+    PanelAdministrador* panelAdmin = new PanelAdministrador(cartelera, promociones, solicitudes, matrizAsientos,
+                                                              arbolFunciones, arbolClientes, tablaReservas, gestorAsientos);
     connect(panelAdmin, &PanelAdministrador::solicitudVolver, this, [this]() {
         pilaPantallas->setCurrentIndex(INICIO);
     });
 
-    PanelCliente* panelCliente = new PanelCliente(cartelera, promociones, solicitudes, matrizAsientos);
+    PanelCliente* panelCliente = new PanelCliente(cartelera, promociones, solicitudes, matrizAsientos,
+                                                    arbolFunciones, arbolClientes, tablaReservas, gestorAsientos);
     connect(panelCliente, &PanelCliente::solicitudVolver, this, [this]() {
         pilaPantallas->setCurrentIndex(INICIO);
     });

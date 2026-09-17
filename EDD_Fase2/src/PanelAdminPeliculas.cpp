@@ -19,7 +19,7 @@
 #include <QDate>
 #include <ctime>
 #include <cstdio>
-#include <vector>
+#include "ArregloDinamico.h"
 
 // ---------- Helper local para calcular dias hasta una fecha ----------
 static int diasHastaFechaLocal(const std::string& fecha) {
@@ -42,12 +42,12 @@ static int diasHastaFechaLocal(const std::string& fecha) {
     return static_cast<int>(std::difftime(tiempoObjetivo, tiempoHoy) / (60 * 60 * 24));
 }
 
-// Recorre el arbol inorden y junta las peliculas en un vector,
+// Recorre el arbol inorden y junta las peliculas en un ArregloDinamico,
 // solo para poder llenar la tabla facilmente.
-static void recolectarInorden(NodoArbolPelicula* nodo, std::vector<Pelicula>& resultado) {
+static void recolectarInorden(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& resultado) {
     if (nodo == nullptr) return;
     recolectarInorden(nodo->izquierdo, resultado);
-    resultado.push_back(nodo->dato);
+    resultado.agregarFinal(nodo->dato);
     recolectarInorden(nodo->derecho, resultado);
 }
 
@@ -103,16 +103,16 @@ QString PanelAdminPeliculas::calcularEstado(const Pelicula& p) const {
 }
 
 void PanelAdminPeliculas::actualizarTabla() {
-    std::vector<Pelicula> peliculas;
+    ArregloDinamico<Pelicula> peliculas;
     recolectarInorden(cartelera.getRaiz(), peliculas);
 
     // Desactivamos el ordenamiento visual mientras llenamos la tabla,
     // para que no interfiera con el orden en que insertamos las filas
     // (si no, con setSortingEnabled activo se puede confundir Qt).
     tabla->setSortingEnabled(false);
-    tabla->setRowCount(static_cast<int>(peliculas.size()));
+    tabla->setRowCount(peliculas.getTamanio());
 
-    for (int fila = 0; fila < static_cast<int>(peliculas.size()); fila++) {
+    for (int fila = 0; fila < peliculas.getTamanio(); fila++) {
         const Pelicula& p = peliculas[fila];
         QString estado = calcularEstado(p);
 

@@ -7,11 +7,16 @@
 #include "ListaCircularSolicitudes.h"
 #include "ListaCircularPromociones.h"
 #include "MatrizDispersaAsientos.h"
+#include "ArbolAVLFunciones.h"
+#include "ArbolBClientes.h"
+#include "TablaHashReservas.h"
+#include "GestorAsientosPorFuncion.h"
 
-// Pestana que muestra los 4 reportes de Graphviz DIRECTAMENTE
-// dentro de la interfaz (no abre un visor externo). Tiene botones
-// de navegacion (Anterior/Siguiente) para pasar entre los 4
-// reportes tipo carrusel, y un boton para (re)generar el actual.
+// Pestana que muestra los reportes de Graphviz DIRECTAMENTE dentro
+// de la interfaz (no abre un visor externo). Tiene botones de
+// navegacion (Anterior/Siguiente) para pasar entre los reportes tipo
+// carrusel (4 de Fase 1 + 4 nuevos de Fase 2), y un boton para
+// (re)generar el actual.
 class PanelReportes : public QWidget {
     Q_OBJECT
 
@@ -20,6 +25,10 @@ public:
                   ListaCircularSolicitudes& solicitudesRef,
                   ListaCircularPromociones& promocionesRef,
                   MatrizDispersaAsientos& matrizRef,
+                  ArbolAVLFunciones& arbolFuncionesRef,
+                  ArbolBClientes& arbolClientesRef,
+                  TablaHashReservas& tablaReservasRef,
+                  GestorAsientosPorFuncion& gestorRef,
                   QWidget* parent = nullptr);
 
 protected:
@@ -35,6 +44,10 @@ private:
     ListaCircularSolicitudes& solicitudes;
     ListaCircularPromociones& promociones;
     MatrizDispersaAsientos& matriz;
+    ArbolAVLFunciones& arbolFunciones;
+    ArbolBClientes& arbolClientes;
+    TablaHashReservas& tablaReservas;
+    GestorAsientosPorFuncion& gestor;
 
     int indiceActual;
     QLabel* labelTitulo;

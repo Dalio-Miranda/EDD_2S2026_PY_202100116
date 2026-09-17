@@ -2,7 +2,7 @@
 #define LISTA_CIRCULAR_SOLICITUDES_H
 
 #include <string>
-#include <vector>
+#include "ArregloDinamico.h"
 #include "Solicitud.h"
 
 // Nodo de la lista circular DOBLEMENTE enlazada de solicitudes.
@@ -48,7 +48,7 @@ public:
     Solicitud* buscarPorNumero(int numero);
 
     // Un cliente puede tener varias solicitudes con el mismo telefono.
-    std::vector<Solicitud> buscarPorTelefono(const std::string& telefono);
+    ArregloDinamico<Solicitud> buscarPorTelefono(const std::string& telefono);
 
     int contarPendientes() const;
 

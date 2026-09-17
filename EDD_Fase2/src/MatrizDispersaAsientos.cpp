@@ -160,14 +160,14 @@ std::string MatrizDispersaAsientos::getClienteEnAsiento(int fila, int columna) c
     return nodo->nombreCliente;
 }
 
-std::vector<std::pair<int, int>> MatrizDispersaAsientos::buscarReservasDeCliente(const std::string& nombre) const {
-    std::vector<std::pair<int, int>> resultado;
+ArregloDinamico<std::pair<int, int>> MatrizDispersaAsientos::buscarReservasDeCliente(const std::string& nombre) const {
+    ArregloDinamico<std::pair<int, int>> resultado;
 
     for (int i = 0; i < numFilas; i++) {
         NodoAsiento* actual = cabecerasFilas[i];
         while (actual != nullptr) {
             if (actual->nombreCliente == nombre) {
-                resultado.push_back({actual->fila, actual->columna});
+                resultado.agregarFinal({actual->fila, actual->columna});
             }
             actual = actual->siguienteEnFila;
         }

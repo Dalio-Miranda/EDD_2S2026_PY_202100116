@@ -75,9 +75,9 @@ void PanelClientePromociones::actualizarTablas() {
             tablaPromociones->insertRow(fila);
 
             QString dias;
-            for (size_t j = 0; j < p.diasAplicables.size(); j++) {
+            for (int j = 0; j < p.diasAplicables.getTamanio(); j++) {
                 dias += QString::fromStdString(p.diasAplicables[j]);
-                if (j + 1 < p.diasAplicables.size()) dias += ", ";
+                if (j + 1 < p.diasAplicables.getTamanio()) dias += ", ";
             }
 
             tablaPromociones->setItem(fila, 0, new QTableWidgetItem(QString::fromStdString(p.codigo)));

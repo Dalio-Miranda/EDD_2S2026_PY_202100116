@@ -94,9 +94,9 @@ void PanelClienteSolicitudes::onConsultarEstado() {
     }
 
     auto resultados = solicitudes.buscarPorTelefono(telefono.toStdString());
-    tablaResultados->setRowCount(static_cast<int>(resultados.size()));
+    tablaResultados->setRowCount(resultados.getTamanio());
 
-    for (int i = 0; i < static_cast<int>(resultados.size()); i++) {
+    for (int i = 0; i < resultados.getTamanio(); i++) {
         const Solicitud& s = resultados[i];
         tablaResultados->setItem(i, 0, new QTableWidgetItem(QString::number(s.numero)));
         tablaResultados->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(s.tipoSolicitud)));
@@ -110,7 +110,7 @@ void PanelClienteSolicitudes::onConsultarEstado() {
         tablaResultados->setItem(i, 4, itemEstado);
     }
 
-    if (resultados.empty()) {
+    if (resultados.estaVacio()) {
         QMessageBox::information(this, "Sin resultados", "No se encontraron solicitudes con ese telefono.");
     }
 }

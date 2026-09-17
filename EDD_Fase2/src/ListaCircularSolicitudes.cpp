@@ -115,14 +115,14 @@ Solicitud* ListaCircularSolicitudes::buscarPorNumero(int numero) {
     return nullptr;
 }
 
-std::vector<Solicitud> ListaCircularSolicitudes::buscarPorTelefono(const std::string& telefono) {
-    std::vector<Solicitud> resultado;
+ArregloDinamico<Solicitud> ListaCircularSolicitudes::buscarPorTelefono(const std::string& telefono) {
+    ArregloDinamico<Solicitud> resultado;
     if (ultimo == nullptr) return resultado;
 
     NodoSolicitud* actual = ultimo->siguiente;
     for (int i = 0; i < tamanio; i++) {
         if (actual->dato.telefono == telefono) {
-            resultado.push_back(actual->dato);
+            resultado.agregarFinal(actual->dato);
         }
         actual = actual->siguiente;
     }

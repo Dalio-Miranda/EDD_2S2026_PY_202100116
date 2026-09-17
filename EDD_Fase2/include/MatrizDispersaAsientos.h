@@ -2,7 +2,7 @@
 #define MATRIZ_DISPERSA_ASIENTOS_H
 
 #include <string>
-#include <vector>
+#include "ArregloDinamico.h"
 #include <utility>
 
 // Nodo de la matriz dispersa. Cada asiento RESERVADO es un nodo que
@@ -67,7 +67,7 @@ public:
 
     // Retorna todas las reservas (fila, columna) de un cliente por nombre,
     // usado para la funcion de "cancelar reserva" del cliente.
-    std::vector<std::pair<int, int>> buscarReservasDeCliente(const std::string& nombre) const;
+    ArregloDinamico<std::pair<int, int>> buscarReservasDeCliente(const std::string& nombre) const;
 
     void imprimirMapa() const;
 

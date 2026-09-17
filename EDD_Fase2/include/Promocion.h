@@ -2,7 +2,7 @@
 #define PROMOCION_H
 
 #include <string>
-#include <vector>
+#include "ArregloDinamico.h"
 #include "ListaDobleBeneficios.h"
 
 // Representa una promoción especial (ej: "Martes de Locura").
@@ -13,7 +13,7 @@ struct Promocion {
     std::string nombre;               // "Martes de Locura"
     std::string fechaInicio;          // AAAA-MM-DD
     std::string fechaFin;             // AAAA-MM-DD
-    std::vector<std::string> diasAplicables; // {"Lunes", "Martes"}
+    ArregloDinamico<std::string> diasAplicables; // {"Lunes", "Martes"}
     ListaDobleBeneficios beneficios;
 };
 

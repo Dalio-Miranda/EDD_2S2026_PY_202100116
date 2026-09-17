@@ -33,10 +33,10 @@ static QString estadoPeliculaCliente(const Pelicula& p) {
     return "En cartelera";
 }
 
-static void recolectarInordenCliente(NodoArbolPelicula* nodo, std::vector<Pelicula>& resultado) {
+static void recolectarInordenCliente(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& resultado) {
     if (nodo == nullptr) return;
     recolectarInordenCliente(nodo->izquierdo, resultado);
-    resultado.push_back(nodo->dato);
+    resultado.agregarFinal(nodo->dato);
     recolectarInordenCliente(nodo->derecho, resultado);
 }
 
@@ -72,10 +72,10 @@ PanelClienteCartelera::PanelClienteCartelera(ArbolBinarioPeliculas& carteleraRef
     onVerTodas();
 }
 
-void PanelClienteCartelera::mostrarPeliculas(const std::vector<Pelicula>& peliculas) {
-    tabla->setRowCount(static_cast<int>(peliculas.size()));
+void PanelClienteCartelera::mostrarPeliculas(const ArregloDinamico<Pelicula>& peliculas) {
+    tabla->setRowCount(peliculas.getTamanio());
 
-    for (int fila = 0; fila < static_cast<int>(peliculas.size()); fila++) {
+    for (int fila = 0; fila < peliculas.getTamanio(); fila++) {
         const Pelicula& p = peliculas[fila];
         QString estado = estadoPeliculaCliente(p);
 
@@ -97,7 +97,7 @@ void PanelClienteCartelera::mostrarPeliculas(const std::vector<Pelicula>& pelicu
 }
 
 void PanelClienteCartelera::onVerTodas() {
-    std::vector<Pelicula> peliculas;
+    ArregloDinamico<Pelicula> peliculas;
     recolectarInordenCliente(cartelera.getRaiz(), peliculas);
     mostrarPeliculas(peliculas);
 }
@@ -116,7 +116,7 @@ void PanelClienteCartelera::onBuscar() {
         return;
     }
 
-    std::vector<Pelicula> resultado;
-    resultado.push_back(*encontrada);
+    ArregloDinamico<Pelicula> resultado;
+    resultado.agregarFinal(*encontrada);
     mostrarPeliculas(resultado);
 }

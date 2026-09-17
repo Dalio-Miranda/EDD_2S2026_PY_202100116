@@ -3,6 +3,8 @@
 #include "PanelAdminPromociones.h"
 #include "PanelAdminSolicitudes.h"
 #include "PanelAdminFunciones.h"
+#include "PanelAdminFunciones2.h"
+#include "PanelAdminClientes.h"
 #include "PanelReportes.h"
 
 #include <QVBoxLayout>
@@ -16,6 +18,10 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
                                         ListaCircularPromociones& promociones,
                                         ListaCircularSolicitudes& solicitudes,
                                         MatrizDispersaAsientos& matrizAsientos,
+                                        ArbolAVLFunciones& arbolFunciones,
+                                        ArbolBClientes& arbolClientes,
+                                        TablaHashReservas& tablaReservas,
+                                        GestorAsientosPorFuncion& gestorAsientos,
                                         QWidget* parent)
     : QWidget(parent) {
 
@@ -41,8 +47,11 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
     pestanas->addTab(new PanelAdminPeliculas(cartelera), "Peliculas");
     pestanas->addTab(new PanelAdminPromociones(promociones), "Promociones");
     pestanas->addTab(new PanelAdminSolicitudes(solicitudes), "Solicitudes");
-    pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos");
-    pestanas->addTab(new PanelReportes(cartelera, solicitudes, promociones, matrizAsientos), "Reportes");
+    pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos (Fase 1)");
+    pestanas->addTab(new PanelAdminFunciones2(arbolFunciones, cartelera, gestorAsientos, tablaReservas, arbolClientes), "Funciones (Fase 2)");
+    pestanas->addTab(new PanelAdminClientes(arbolClientes, tablaReservas), "Clientes");
+    pestanas->addTab(new PanelReportes(cartelera, solicitudes, promociones, matrizAsientos,
+                                        arbolFunciones, arbolClientes, tablaReservas, gestorAsientos), "Reportes");
 
     layoutPrincipal->addLayout(layoutSuperior);
     layoutPrincipal->addWidget(pestanas);

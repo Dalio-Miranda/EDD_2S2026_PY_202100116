@@ -1,21 +1,25 @@
 #include "TablaHashReservas.h"
 
 TablaHashReservas::TablaHashReservas(int tamanioTabla)
-    : buckets(tamanioTabla, nullptr), tamanioTabla(tamanioTabla), cantidadReservas(0) {}
+    : tamanioTabla(tamanioTabla), cantidadReservas(0) {
+    buckets = new NodoHash*[tamanioTabla];
+    for (int i = 0; i < tamanioTabla; i++) {
+        buckets[i] = nullptr;
+    }
+}
 
 TablaHashReservas::~TablaHashReservas() {
-    for (NodoHash* cabeza : buckets) {
-        NodoHash* actual = cabeza;
+    for (int i = 0; i < tamanioTabla; i++) {
+        NodoHash* actual = buckets[i];
         while (actual != nullptr) {
             NodoHash* siguiente = actual->siguiente;
             delete actual;
             actual = siguiente;
         }
     }
+    delete[] buckets;
 }
 
-// Hash tipo djb2: h = h*33 + c, acumulado sobre cada caracter. Simple,
-// rapido y con buena distribucion para claves cortas tipo "R001".
 int TablaHashReservas::funcionHash(const std::string& clave) const {
     unsigned long h = 5381;
     for (unsigned char c : clave) {
@@ -31,14 +35,12 @@ int TablaHashReservas::calcularIndice(const std::string& codigoReserva) const {
 bool TablaHashReservas::insertar(const Reserva& r) {
     int indice = funcionHash(r.codigoReserva);
 
-    // Verificar que no exista ya (recorrer la lista del bucket).
     for (NodoHash* actual = buckets[indice]; actual != nullptr; actual = actual->siguiente) {
         if (actual->dato.codigoReserva == r.codigoReserva) {
-            return false; // codigo_reserva duplicado
+            return false;
         }
     }
 
-    // Insertar al inicio de la lista del bucket (O(1)).
     NodoHash* nuevo = new NodoHash(r);
     nuevo->siguiente = buckets[indice];
     buckets[indice] = nuevo;
@@ -68,7 +70,7 @@ bool TablaHashReservas::eliminar(const std::string& codigoReserva) {
         actual = actual->siguiente;
     }
 
-    return false; // no existia
+    return false;
 }
 
 Reserva* TablaHashReservas::buscar(const std::string& codigoReserva) {
@@ -95,12 +97,11 @@ int TablaHashReservas::getCantidadReservas() const { return cantidadReservas; }
 int TablaHashReservas::getTamanioTabla() const { return tamanioTabla; }
 bool TablaHashReservas::estaVacio() const { return cantidadReservas == 0; }
 
-std::vector<Reserva> TablaHashReservas::listarTodas() const {
-    std::vector<Reserva> salida;
-    salida.reserve(cantidadReservas);
-    for (NodoHash* cabeza : buckets) {
-        for (NodoHash* actual = cabeza; actual != nullptr; actual = actual->siguiente) {
-            salida.push_back(actual->dato);
+ArregloDinamico<Reserva> TablaHashReservas::listarTodas() const {
+    ArregloDinamico<Reserva> salida;
+    for (int i = 0; i < tamanioTabla; i++) {
+        for (NodoHash* actual = buckets[i]; actual != nullptr; actual = actual->siguiente) {
+            salida.agregarFinal(actual->dato);
         }
     }
     return salida;
@@ -108,15 +109,13 @@ std::vector<Reserva> TablaHashReservas::listarTodas() const {
 
 int TablaHashReservas::contarBucketsOcupados() const {
     int contador = 0;
-    for (NodoHash* cabeza : buckets) {
-        if (cabeza != nullptr) contador++;
+    for (int i = 0; i < tamanioTabla; i++) {
+        if (buckets[i] != nullptr) contador++;
     }
     return contador;
 }
 
 int TablaHashReservas::contarColisiones() const {
-    // Cada reserva mas alla de la primera en un bucket ocupado es una
-    // colision (definicion estandar para tablas con encadenamiento).
     return cantidadReservas - contarBucketsOcupados();
 }
 

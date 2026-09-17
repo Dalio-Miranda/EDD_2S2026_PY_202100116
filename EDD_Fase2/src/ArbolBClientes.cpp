@@ -22,11 +22,11 @@ NodoB* ArbolBClientes::buscarRec(NodoB* nodo, const std::string& id, int& indice
     if (nodo == nullptr) return nullptr;
 
     int i = 0;
-    while (i < static_cast<int>(nodo->claves.size()) && id > nodo->claves[i].id) {
+    while (i < nodo->claves.getTamanio() && id > nodo->claves[i].id) {
         i++;
     }
 
-    if (i < static_cast<int>(nodo->claves.size()) && id == nodo->claves[i].id) {
+    if (i < nodo->claves.getTamanio() && id == nodo->claves[i].id) {
         indiceOut = i;
         return nodo;
     }
@@ -50,41 +50,33 @@ bool ArbolBClientes::existe(const std::string& id) const {
 
 // ------------------------------- insercion --------------------------------
 
-// Divide al hijo lleno nodo->hijos[indiceHijo] (que tiene exactamente
-// MAX_CLAVES_B claves) en dos, y sube su clave mediana a 'nodo'.
 void ArbolBClientes::dividirHijo(NodoB* nodo, int indiceHijo) {
     NodoB* hijoLleno = nodo->hijos[indiceHijo];
     NodoB* nuevoHijo = new NodoB(hijoLleno->esHoja);
 
-    // Las ultimas (GRADO_MINIMO_B - 1) claves de hijoLleno pasan al
-    // nuevo nodo hermano.
     for (int j = 0; j < GRADO_MINIMO_B - 1; j++) {
-        nuevoHijo->claves.push_back(hijoLleno->claves[j + GRADO_MINIMO_B]);
+        nuevoHijo->claves.agregarFinal(hijoLleno->claves[j + GRADO_MINIMO_B]);
     }
 
-    // Si no es hoja, tambien se reparten los hijos correspondientes.
     if (!hijoLleno->esHoja) {
         for (int j = 0; j < GRADO_MINIMO_B; j++) {
-            nuevoHijo->hijos.push_back(hijoLleno->hijos[j + GRADO_MINIMO_B]);
+            nuevoHijo->hijos.agregarFinal(hijoLleno->hijos[j + GRADO_MINIMO_B]);
         }
-        hijoLleno->hijos.resize(GRADO_MINIMO_B);
+        hijoLleno->hijos.ajustarTamanio(GRADO_MINIMO_B);
     }
 
-    // La clave mediana (indice GRADO_MINIMO_B - 1) sube al padre.
     Cliente medianaSubida = hijoLleno->claves[GRADO_MINIMO_B - 1];
-    hijoLleno->claves.resize(GRADO_MINIMO_B - 1);
+    hijoLleno->claves.ajustarTamanio(GRADO_MINIMO_B - 1);
 
-    // Se inserta el puntero al nuevo hijo y la clave mediana en 'nodo'.
-    nodo->hijos.insert(nodo->hijos.begin() + indiceHijo + 1, nuevoHijo);
-    nodo->claves.insert(nodo->claves.begin() + indiceHijo, medianaSubida);
+    nodo->hijos.insertarEn(indiceHijo + 1, nuevoHijo);
+    nodo->claves.insertarEn(indiceHijo, medianaSubida);
 }
 
 void ArbolBClientes::insertarNoLleno(NodoB* nodo, const Cliente& c) {
-    int i = static_cast<int>(nodo->claves.size()) - 1;
+    int i = nodo->claves.getTamanio() - 1;
 
     if (nodo->esHoja) {
-        // Insertar en la posicion ordenada correcta dentro de la hoja.
-        nodo->claves.push_back(c); // placeholder, se reordena abajo
+        nodo->claves.agregarFinal(c); // placeholder, se reordena abajo
         while (i >= 0 && c.id < nodo->claves[i].id) {
             nodo->claves[i + 1] = nodo->claves[i];
             i--;
@@ -94,9 +86,9 @@ void ArbolBClientes::insertarNoLleno(NodoB* nodo, const Cliente& c) {
         while (i >= 0 && c.id < nodo->claves[i].id) {
             i--;
         }
-        i++; // indice del hijo donde debe descender
+        i++;
 
-        if (static_cast<int>(nodo->hijos[i]->claves.size()) == MAX_CLAVES_B) {
+        if (nodo->hijos[i]->claves.getTamanio() == MAX_CLAVES_B) {
             dividirHijo(nodo, i);
             if (c.id > nodo->claves[i].id) {
                 i++;
@@ -107,15 +99,14 @@ void ArbolBClientes::insertarNoLleno(NodoB* nodo, const Cliente& c) {
 }
 
 bool ArbolBClientes::insertar(const Cliente& c) {
-    if (existe(c.id)) return false; // id duplicado: no se inserta
+    if (existe(c.id)) return false;
 
     if (raiz == nullptr) {
         raiz = new NodoB(true);
-        raiz->claves.push_back(c);
-    } else if (static_cast<int>(raiz->claves.size()) == MAX_CLAVES_B) {
-        // La raiz esta llena: crece el arbol un nivel.
+        raiz->claves.agregarFinal(c);
+    } else if (raiz->claves.getTamanio() == MAX_CLAVES_B) {
         NodoB* nuevaRaiz = new NodoB(false);
-        nuevaRaiz->hijos.push_back(raiz);
+        nuevaRaiz->hijos.agregarFinal(raiz);
         dividirHijo(nuevaRaiz, 0);
         raiz = nuevaRaiz;
         insertarNoLleno(raiz, c);
@@ -135,117 +126,96 @@ bool ArbolBClientes::editar(const std::string& id, const Cliente& datosNuevos) {
     if (nodo == nullptr) return false;
 
     Cliente actualizado = datosNuevos;
-    actualizado.id = id; // la clave no cambia
+    actualizado.id = id;
     nodo->claves[indice] = actualizado;
     return true;
 }
 
 // ------------------------------- eliminacion --------------------------------
-// Sigue el algoritmo estandar de eliminacion de arboles B (CLRS 18.3).
 
 int ArbolBClientes::encontrarIndiceClave(NodoB* nodo, const std::string& id) const {
     int i = 0;
-    while (i < static_cast<int>(nodo->claves.size()) && nodo->claves[i].id < id) {
+    while (i < nodo->claves.getTamanio() && nodo->claves[i].id < id) {
         i++;
     }
     return i;
 }
 
 Cliente ArbolBClientes::obtenerPredecesor(NodoB* nodo, int indice) const {
-    // El predecesor es el maximo del subarbol izquierdo de claves[indice].
     NodoB* actual = nodo->hijos[indice];
     while (!actual->esHoja) {
-        actual = actual->hijos.back();
+        actual = actual->hijos.atras();
     }
-    return actual->claves.back();
+    return actual->claves.atras();
 }
 
 Cliente ArbolBClientes::obtenerSucesor(NodoB* nodo, int indice) const {
-    // El sucesor es el minimo del subarbol derecho de claves[indice].
     NodoB* actual = nodo->hijos[indice + 1];
     while (!actual->esHoja) {
-        actual = actual->hijos.front();
+        actual = actual->hijos.frente();
     }
-    return actual->claves.front();
+    return actual->claves.frente();
 }
 
-// Toma prestada una clave del hermano IZQUIERDO de hijos[indiceHijo],
-// rotando a traves del padre.
 void ArbolBClientes::prestarDeAnterior(NodoB* nodo, int indiceHijo) {
     NodoB* hijo = nodo->hijos[indiceHijo];
     NodoB* hermano = nodo->hijos[indiceHijo - 1];
 
-    // La clave del padre baja al frente del hijo actual.
-    hijo->claves.insert(hijo->claves.begin(), nodo->claves[indiceHijo - 1]);
+    hijo->claves.insertarEn(0, nodo->claves[indiceHijo - 1]);
 
-    // La ultima clave del hermano sube al padre.
-    nodo->claves[indiceHijo - 1] = hermano->claves.back();
-    hermano->claves.pop_back();
+    nodo->claves[indiceHijo - 1] = hermano->claves.atras();
+    hermano->claves.eliminarUltimo();
 
-    // Si no son hojas, tambien se mueve el ultimo hijo del hermano.
     if (!hijo->esHoja) {
-        hijo->hijos.insert(hijo->hijos.begin(), hermano->hijos.back());
-        hermano->hijos.pop_back();
+        hijo->hijos.insertarEn(0, hermano->hijos.atras());
+        hermano->hijos.eliminarUltimo();
     }
 }
 
-// Toma prestada una clave del hermano DERECHO de hijos[indiceHijo].
 void ArbolBClientes::prestarDeSiguiente(NodoB* nodo, int indiceHijo) {
     NodoB* hijo = nodo->hijos[indiceHijo];
     NodoB* hermano = nodo->hijos[indiceHijo + 1];
 
-    // La clave del padre baja al final del hijo actual.
-    hijo->claves.push_back(nodo->claves[indiceHijo]);
+    hijo->claves.agregarFinal(nodo->claves[indiceHijo]);
 
-    // La primera clave del hermano sube al padre.
-    nodo->claves[indiceHijo] = hermano->claves.front();
-    hermano->claves.erase(hermano->claves.begin());
+    nodo->claves[indiceHijo] = hermano->claves.frente();
+    hermano->claves.eliminarEn(0);
 
-    // Si no son hojas, tambien se mueve el primer hijo del hermano.
     if (!hijo->esHoja) {
-        hijo->hijos.push_back(hermano->hijos.front());
-        hermano->hijos.erase(hermano->hijos.begin());
+        hijo->hijos.agregarFinal(hermano->hijos.frente());
+        hermano->hijos.eliminarEn(0);
     }
 }
 
-// Fusiona hijos[indiceHijo], la clave nodo->claves[indiceHijo] y
-// hijos[indiceHijo + 1] en un solo nodo (hijos[indiceHijo]), y libera
-// el hermano derecho.
 void ArbolBClientes::fusionarConSiguiente(NodoB* nodo, int indiceHijo) {
     NodoB* hijo = nodo->hijos[indiceHijo];
     NodoB* hermano = nodo->hijos[indiceHijo + 1];
 
-    // Baja la clave del padre al hijo, seguida de todas las claves
-    // del hermano.
-    hijo->claves.push_back(nodo->claves[indiceHijo]);
+    hijo->claves.agregarFinal(nodo->claves[indiceHijo]);
     for (const Cliente& c : hermano->claves) {
-        hijo->claves.push_back(c);
+        hijo->claves.agregarFinal(c);
     }
     if (!hijo->esHoja) {
         for (NodoB* h : hermano->hijos) {
-            hijo->hijos.push_back(h);
+            hijo->hijos.agregarFinal(h);
         }
     }
 
-    // Elimina del padre la clave y el puntero al hermano fusionado.
-    nodo->claves.erase(nodo->claves.begin() + indiceHijo);
-    nodo->hijos.erase(nodo->hijos.begin() + indiceHijo + 1);
+    nodo->claves.eliminarEn(indiceHijo);
+    nodo->hijos.eliminarEn(indiceHijo + 1);
 
     delete hermano;
 }
 
-// Garantiza que hijos[indiceHijo] tenga al menos GRADO_MINIMO_B claves
-// antes de descender a el, pidiendo prestado a un hermano o fusionando.
 void ArbolBClientes::rellenarHijo(NodoB* nodo, int indiceHijo) {
     if (indiceHijo != 0 &&
-        static_cast<int>(nodo->hijos[indiceHijo - 1]->claves.size()) >= GRADO_MINIMO_B) {
+        nodo->hijos[indiceHijo - 1]->claves.getTamanio() >= GRADO_MINIMO_B) {
         prestarDeAnterior(nodo, indiceHijo);
-    } else if (indiceHijo != static_cast<int>(nodo->hijos.size()) - 1 &&
-               static_cast<int>(nodo->hijos[indiceHijo + 1]->claves.size()) >= GRADO_MINIMO_B) {
+    } else if (indiceHijo != nodo->hijos.getTamanio() - 1 &&
+               nodo->hijos[indiceHijo + 1]->claves.getTamanio() >= GRADO_MINIMO_B) {
         prestarDeSiguiente(nodo, indiceHijo);
     } else {
-        // Ambos hermanos estan en el minimo: fusionar.
-        if (indiceHijo != static_cast<int>(nodo->hijos.size()) - 1) {
+        if (indiceHijo != nodo->hijos.getTamanio() - 1) {
             fusionarConSiguiente(nodo, indiceHijo);
         } else {
             fusionarConSiguiente(nodo, indiceHijo - 1);
@@ -256,45 +226,35 @@ void ArbolBClientes::rellenarHijo(NodoB* nodo, int indiceHijo) {
 void ArbolBClientes::eliminarRec(NodoB* nodo, const std::string& id) {
     int indice = encontrarIndiceClave(nodo, id);
 
-    if (indice < static_cast<int>(nodo->claves.size()) && nodo->claves[indice].id == id) {
-        // La clave esta en este nodo.
+    if (indice < nodo->claves.getTamanio() && nodo->claves[indice].id == id) {
         if (nodo->esHoja) {
-            // Caso 1: nodo hoja, se elimina directamente.
-            nodo->claves.erase(nodo->claves.begin() + indice);
+            nodo->claves.eliminarEn(indice);
         } else {
-            // Caso 2: nodo interno.
-            if (static_cast<int>(nodo->hijos[indice]->claves.size()) >= GRADO_MINIMO_B) {
-                // 2a: el hijo predecesor tiene suficientes claves.
+            if (nodo->hijos[indice]->claves.getTamanio() >= GRADO_MINIMO_B) {
                 Cliente pred = obtenerPredecesor(nodo, indice);
                 nodo->claves[indice] = pred;
                 eliminarRec(nodo->hijos[indice], pred.id);
-            } else if (static_cast<int>(nodo->hijos[indice + 1]->claves.size()) >= GRADO_MINIMO_B) {
-                // 2b: el hijo sucesor tiene suficientes claves.
+            } else if (nodo->hijos[indice + 1]->claves.getTamanio() >= GRADO_MINIMO_B) {
                 Cliente suc = obtenerSucesor(nodo, indice);
                 nodo->claves[indice] = suc;
                 eliminarRec(nodo->hijos[indice + 1], suc.id);
             } else {
-                // 2c: ambos hijos tienen el minimo -> fusionar y
-                // eliminar recursivamente desde el nodo fusionado.
                 fusionarConSiguiente(nodo, indice);
                 eliminarRec(nodo->hijos[indice], id);
             }
         }
     } else {
-        // La clave no esta en este nodo: debe estar (si existe) en
-        // el subarbol hijos[indice].
         if (nodo->esHoja) {
-            return; // no existe en el arbol
+            return;
         }
 
-        bool esUltimoHijo = (indice == static_cast<int>(nodo->hijos.size()) - 1);
+        bool esUltimoHijo = (indice == nodo->hijos.getTamanio() - 1);
 
-        if (static_cast<int>(nodo->hijos[indice]->claves.size()) < GRADO_MINIMO_B) {
+        if (nodo->hijos[indice]->claves.getTamanio() < GRADO_MINIMO_B) {
             rellenarHijo(nodo, indice);
         }
 
-        // Si se fusiono con el ultimo hijo, el indice a seguir cambia.
-        if (esUltimoHijo && indice > static_cast<int>(nodo->claves.size())) {
+        if (esUltimoHijo && indice > nodo->claves.getTamanio()) {
             eliminarRec(nodo->hijos[indice - 1], id);
         } else {
             eliminarRec(nodo->hijos[indice], id);
@@ -307,14 +267,12 @@ bool ArbolBClientes::eliminar(const std::string& id) {
 
     eliminarRec(raiz, id);
 
-    // Si la raiz se quedo sin claves y tiene un hijo, ese hijo pasa a
-    // ser la nueva raiz (el arbol se encoge un nivel).
-    if (raiz->claves.empty() && !raiz->esHoja) {
+    if (raiz->claves.estaVacio() && !raiz->esHoja) {
         NodoB* raizVieja = raiz;
         raiz = raiz->hijos[0];
-        raizVieja->hijos.clear(); // evitar que liberar() borre el nuevo raiz
+        raizVieja->hijos.vaciar();
         delete raizVieja;
-    } else if (raiz->claves.empty() && raiz->esHoja) {
+    } else if (raiz->claves.estaVacio() && raiz->esHoja) {
         delete raiz;
         raiz = nullptr;
     }
@@ -329,24 +287,23 @@ NodoB* ArbolBClientes::getRaiz() const { return raiz; }
 
 // ------------------------------- recorrido --------------------------------
 
-void ArbolBClientes::inordenRec(NodoB* nodo, std::vector<Cliente>& salida) const {
+void ArbolBClientes::inordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const {
     if (nodo == nullptr) return;
 
     int i;
-    for (i = 0; i < static_cast<int>(nodo->claves.size()); i++) {
+    for (i = 0; i < nodo->claves.getTamanio(); i++) {
         if (!nodo->esHoja) {
             inordenRec(nodo->hijos[i], salida);
         }
-        salida.push_back(nodo->claves[i]);
+        salida.agregarFinal(nodo->claves[i]);
     }
     if (!nodo->esHoja) {
         inordenRec(nodo->hijos[i], salida);
     }
 }
 
-std::vector<Cliente> ArbolBClientes::listarClientes() const {
-    std::vector<Cliente> salida;
-    salida.reserve(tamanio);
+ArregloDinamico<Cliente> ArbolBClientes::listarClientes() const {
+    ArregloDinamico<Cliente> salida;
     inordenRec(raiz, salida);
     return salida;
 }

@@ -8,10 +8,14 @@
 #include "ListaCircularPromociones.h"
 #include "ListaCircularSolicitudes.h"
 #include "MatrizDispersaAsientos.h"
+#include "ArbolAVLFunciones.h"
+#include "ArbolBClientes.h"
+#include "TablaHashReservas.h"
+#include "GestorAsientosPorFuncion.h"
 
 // Ventana principal del sistema. Contiene un QStackedWidget que
 // alterna entre la pantalla de inicio, el panel de administrador
-// y el panel de cliente. Las 4 estructuras de datos viven aqui,
+// y el panel de cliente. Las estructuras de datos viven aqui,
 // como miembros de la ventana, para que todos los paneles trabajen
 // sobre los mismos datos.
 class MainWindow : public QMainWindow {
@@ -23,11 +27,17 @@ public:
 private:
     QStackedWidget* pilaPantallas;
 
-    // Las 4 estructuras de datos del sistema, compartidas por todos los paneles.
+    // Estructuras de datos de Fase 1, compartidas por todos los paneles.
     ArbolBinarioPeliculas cartelera;
     ListaCircularPromociones promociones;
     ListaCircularSolicitudes solicitudes;
     MatrizDispersaAsientos matrizAsientos;
+
+    // Estructuras nuevas de Fase 2.
+    ArbolAVLFunciones arbolFunciones;
+    ArbolBClientes arbolClientes;
+    TablaHashReservas tablaReservas;
+    GestorAsientosPorFuncion gestorAsientos;
 
     QWidget* crearPantallaInicio();
     QWidget* crearPlaceholder(const QString& texto);

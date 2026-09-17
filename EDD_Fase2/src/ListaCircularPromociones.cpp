@@ -109,9 +109,9 @@ void ListaCircularPromociones::imprimir() const {
         std::cout << p.codigo << " | " << p.nombre
                    << " | Vigencia: " << p.fechaInicio << " a " << p.fechaFin
                    << " | Dias: ";
-        for (size_t j = 0; j < p.diasAplicables.size(); j++) {
+        for (int j = 0; j < p.diasAplicables.getTamanio(); j++) {
             std::cout << p.diasAplicables[j];
-            if (j + 1 < p.diasAplicables.size()) std::cout << ", ";
+            if (j + 1 < p.diasAplicables.getTamanio()) std::cout << ", ";
         }
         std::cout << std::endl;
         std::cout << "  Beneficios:" << std::endl;

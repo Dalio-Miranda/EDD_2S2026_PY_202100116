@@ -9,30 +9,47 @@
 #include <QFont>
 #include <QShowEvent>
 
-// Titulos y rutas de los 4 reportes, en el mismo orden en que
-// ReportesGraphviz los genera.
-static const QString TITULOS[4] = {
+// Titulos y rutas de los reportes, en el mismo orden en que
+// ReportesGraphviz los genera. Los primeros 4 son de Fase 1; los
+// ultimos 4 son nuevos de Fase 2.
+static const int NUM_REPORTES = 8;
+
+static const QString TITULOS[NUM_REPORTES] = {
     "Reporte 1: Arbol Binario de Busqueda (Cartelera)",
     "Reporte 2: Lista Circular Doblemente Enlazada (Solicitudes Pendientes)",
     "Reporte 3: Lista Circular de Listas (Promociones y Beneficios)",
-    "Reporte 4: Matriz Dispersa (Mapa de Asientos)"
+    "Reporte 4: Matriz Dispersa Fase 1 (Mapa de Asientos)",
+    "Reporte 5: Arbol AVL de Funciones",
+    "Reporte 6: Arbol B de orden 4 de Clientes",
+    "Reporte 7: Tabla Hash de Reservas",
+    "Reporte 8: Matriz Dispersa Fase 2 (Funcion Activa)"
 };
 
-static const QString RUTAS[4] = {
+static const QString RUTAS[NUM_REPORTES] = {
     "../reports/reporte1_cartelera_bst.png",
     "../reports/reporte2_solicitudes_pendientes.png",
     "../reports/reporte3_promociones_beneficios.png",
-    "../reports/reporte4_matriz_asientos.png"
+    "../reports/reporte4_matriz_asientos.png",
+    "../reports/reporte_funciones_avl.png",
+    "../reports/reporte_clientes_arbolb.png",
+    "../reports/reporte_reservas_hash.png",
+    "../reports/reporte_matriz_asientos_funcion.png"
 };
 
 PanelReportes::PanelReportes(ArbolBinarioPeliculas& carteleraRef,
                               ListaCircularSolicitudes& solicitudesRef,
                               ListaCircularPromociones& promocionesRef,
                               MatrizDispersaAsientos& matrizRef,
+                              ArbolAVLFunciones& arbolFuncionesRef,
+                              ArbolBClientes& arbolClientesRef,
+                              TablaHashReservas& tablaReservasRef,
+                              GestorAsientosPorFuncion& gestorRef,
                               QWidget* parent)
     : QWidget(parent),
       cartelera(carteleraRef), solicitudes(solicitudesRef),
       promociones(promocionesRef), matriz(matrizRef),
+      arbolFunciones(arbolFuncionesRef), arbolClientes(arbolClientesRef),
+      tablaReservas(tablaReservasRef), gestor(gestorRef),
       indiceActual(0) {
 
     QVBoxLayout* layoutPrincipal = new QVBoxLayout(this);
@@ -80,12 +97,12 @@ void PanelReportes::showEvent(QShowEvent* event) {
 }
 
 void PanelReportes::onAnterior() {
-    indiceActual = (indiceActual + 3) % 4; // +3 mod 4 = -1 mod 4, evita numeros negativos
+    indiceActual = (indiceActual + NUM_REPORTES - 1) % NUM_REPORTES;
     mostrarActual();
 }
 
 void PanelReportes::onSiguiente() {
-    indiceActual = (indiceActual + 1) % 4;
+    indiceActual = (indiceActual + 1) % NUM_REPORTES;
     mostrarActual();
 }
 
@@ -100,11 +117,15 @@ void PanelReportes::generarActual() {
         case 1: ReportesGraphviz::generarReporteSolicitudes(solicitudes, "../reports"); break;
         case 2: ReportesGraphviz::generarReportePromociones(promociones, "../reports"); break;
         case 3: ReportesGraphviz::generarReporteMatrizAsientos(matriz, "../reports"); break;
+        case 4: ReportesGraphviz::generarReporteFunciones(arbolFunciones, "../reports"); break;
+        case 5: ReportesGraphviz::generarReporteClientes(arbolClientes, "../reports"); break;
+        case 6: ReportesGraphviz::generarReporteReservas(tablaReservas, "../reports"); break;
+        case 7: ReportesGraphviz::generarReporteMatrizAsientosPorFuncion(gestor, tablaReservas, arbolClientes, "../reports"); break;
     }
 }
 
 void PanelReportes::mostrarActual() {
-    labelTitulo->setText(QString("%1  (%2/4)").arg(TITULOS[indiceActual]).arg(indiceActual + 1));
+    labelTitulo->setText(QString("%1  (%2/%3)").arg(TITULOS[indiceActual]).arg(indiceActual + 1).arg(NUM_REPORTES));
 
     QPixmap imagen(RUTAS[indiceActual]);
     if (imagen.isNull()) {
