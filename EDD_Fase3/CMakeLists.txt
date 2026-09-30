@@ -50,6 +50,8 @@ set(SOURCES
     src/SHA256.cpp
     src/Transaccion.cpp
     src/Bloque.cpp
+    src/ArbolMerkle.cpp
+    src/Blockchain.cpp
 
     # --- Paneles de UI nuevos de Fase 2 ---
     src/PanelAdminFunciones2.cpp
@@ -100,6 +102,8 @@ set(HEADERS
     include/SHA256.h
     include/Transaccion.h
     include/Bloque.h
+    include/ArbolMerkle.h
+    include/Blockchain.h
     include/ArregloDinamico.h
     include/TipoRecorrido.h
 
