@@ -50,6 +50,7 @@ set(SOURCES
     src/PanelClienteReservar2.cpp
     src/PanelClienteHistorial2.cpp
     src/PanelClienteCancelarReserva2.cpp
+    src/PanelClienteMiPerfil.cpp
 )
 
 set(HEADERS
@@ -95,6 +96,7 @@ set(HEADERS
     include/PanelClienteReservar2.h
     include/PanelClienteHistorial2.h
     include/PanelClienteCancelarReserva2.h
+    include/PanelClienteMiPerfil.h
 )
 
 add_executable(CinemaUSAC_Fase2 ${SOURCES} ${HEADERS})

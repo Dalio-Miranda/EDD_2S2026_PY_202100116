@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QMessageBox>
+#include <QShowEvent>
 
 PanelClienteSolicitudes::PanelClienteSolicitudes(ListaCircularSolicitudes& solicitudesRef, QWidget* parent)
     : QWidget(parent), solicitudes(solicitudesRef) {
@@ -33,16 +34,18 @@ PanelClienteSolicitudes::PanelClienteSolicitudes(ListaCircularSolicitudes& solic
     formulario->addRow("Descripcion:", campoDescripcion);
     formulario->addRow(botonEnviar);
 
-    // ---------- Seccion: consultar estado ----------
-    QGroupBox* grupoConsultar = new QGroupBox("Consultar Estado de Solicitudes");
+    // ---------- Seccion: ver / consultar solicitudes ----------
+    QGroupBox* grupoConsultar = new QGroupBox("Solicitudes");
     QVBoxLayout* layoutConsultar = new QVBoxLayout(grupoConsultar);
 
     QHBoxLayout* layoutBusquedaConsulta = new QHBoxLayout();
     campoTelefonoConsulta = new QLineEdit();
-    campoTelefonoConsulta->setPlaceholderText("Tu numero de telefono");
-    QPushButton* botonConsultar = new QPushButton("Consultar");
+    campoTelefonoConsulta->setPlaceholderText("Filtrar por tu numero de telefono (opcional)");
+    QPushButton* botonConsultar = new QPushButton("Buscar por Telefono");
+    QPushButton* botonVerTodas = new QPushButton("Ver Todas");
     layoutBusquedaConsulta->addWidget(campoTelefonoConsulta);
     layoutBusquedaConsulta->addWidget(botonConsultar);
+    layoutBusquedaConsulta->addWidget(botonVerTodas);
 
     tablaResultados = new QTableWidget();
     tablaResultados->setColumnCount(5);
@@ -58,6 +61,14 @@ PanelClienteSolicitudes::PanelClienteSolicitudes(ListaCircularSolicitudes& solic
 
     connect(botonEnviar, &QPushButton::clicked, this, &PanelClienteSolicitudes::onEnviarSolicitud);
     connect(botonConsultar, &QPushButton::clicked, this, &PanelClienteSolicitudes::onConsultarEstado);
+    connect(botonVerTodas, &QPushButton::clicked, this, &PanelClienteSolicitudes::onVerTodas);
+}
+
+void PanelClienteSolicitudes::showEvent(QShowEvent* event) {
+    QWidget::showEvent(event);
+    // Al entrar a la pestana se muestran TODAS las solicitudes de
+    // una vez; no hace falta buscar primero para ver algo.
+    mostrarResultados(solicitudes.listarTodas());
 }
 
 void PanelClienteSolicitudes::onEnviarSolicitud() {
@@ -78,22 +89,37 @@ void PanelClienteSolicitudes::onEnviarSolicitud() {
     );
 
     QMessageBox::information(this, "Solicitud enviada",
-        QString("Tu solicitud fue registrada con el numero #%1. Puedes consultar su estado abajo usando tu telefono.")
+        QString("Tu solicitud fue registrada con el numero #%1. Puedes verla abajo, en la lista de todas las solicitudes.")
             .arg(numero));
 
     campoNombre->clear();
     campoTelefono->clear();
     campoDescripcion->clear();
+
+    mostrarResultados(solicitudes.listarTodas());
 }
 
 void PanelClienteSolicitudes::onConsultarEstado() {
     QString telefono = campoTelefonoConsulta->text().trimmed();
     if (telefono.isEmpty()) {
-        QMessageBox::warning(this, "Falta el telefono", "Ingresa tu numero de telefono para consultar.");
+        QMessageBox::warning(this, "Falta el telefono", "Ingresa un numero de telefono para filtrar, o presiona 'Ver Todas'.");
         return;
     }
 
     auto resultados = solicitudes.buscarPorTelefono(telefono.toStdString());
+    mostrarResultados(resultados);
+
+    if (resultados.estaVacio()) {
+        QMessageBox::information(this, "Sin resultados", "No se encontraron solicitudes con ese telefono.");
+    }
+}
+
+void PanelClienteSolicitudes::onVerTodas() {
+    campoTelefonoConsulta->clear();
+    mostrarResultados(solicitudes.listarTodas());
+}
+
+void PanelClienteSolicitudes::mostrarResultados(const ArregloDinamico<Solicitud>& resultados) {
     tablaResultados->setRowCount(resultados.getTamanio());
 
     for (int i = 0; i < resultados.getTamanio(); i++) {
@@ -108,9 +134,5 @@ void PanelClienteSolicitudes::onConsultarEstado() {
         else if (s.estado == "En proceso") itemEstado->setBackground(QColor("#A9D6E5"));
         else if (s.estado == "Atendida") itemEstado->setBackground(QColor("#8BE28B"));
         tablaResultados->setItem(i, 4, itemEstado);
-    }
-
-    if (resultados.estaVacio()) {
-        QMessageBox::information(this, "Sin resultados", "No se encontraron solicitudes con ese telefono.");
     }
 }

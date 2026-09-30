@@ -7,6 +7,7 @@
 #include "PanelClienteReservar2.h"
 #include "PanelClienteHistorial2.h"
 #include "PanelClienteCancelarReserva2.h"
+#include "PanelClienteMiPerfil.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -219,6 +220,7 @@ void PanelCliente::construirPaginaSesion() {
 
     QTabWidget* pestanas = new QTabWidget();
     pestanas->addTab(new PanelClienteCartelera(cartelera), "Cartelera");
+    pestanas->addTab(new PanelClienteMiPerfil(clientes, idClienteActual), "Mi Perfil");
     pestanas->addTab(new PanelClienteReservar2(cartelera, funciones, gestor, reservas, clientes, idClienteActual), "Reservar");
     pestanas->addTab(new PanelClienteHistorial2(clientes, reservas, idClienteActual), "Mis Reservas");
     pestanas->addTab(new PanelClienteCancelarReserva2(clientes, reservas, funciones, gestor, idClienteActual), "Cancelar Reserva");

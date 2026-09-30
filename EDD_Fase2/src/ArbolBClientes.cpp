@@ -302,8 +302,48 @@ void ArbolBClientes::inordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) c
     }
 }
 
-ArregloDinamico<Cliente> ArbolBClientes::listarClientes() const {
+void ArbolBClientes::preordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const {
+    if (nodo == nullptr) return;
+
+    // Primero TODAS las claves de este nodo (en orden), luego cada hijo.
+    for (int i = 0; i < nodo->claves.getTamanio(); i++) {
+        salida.agregarFinal(nodo->claves[i]);
+    }
+    if (!nodo->esHoja) {
+        for (NodoB* hijo : nodo->hijos) {
+            preordenRec(hijo, salida);
+        }
+    }
+}
+
+void ArbolBClientes::postordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const {
+    if (nodo == nullptr) return;
+
+    // Primero cada hijo, luego TODAS las claves de este nodo.
+    if (!nodo->esHoja) {
+        for (NodoB* hijo : nodo->hijos) {
+            postordenRec(hijo, salida);
+        }
+    }
+    for (int i = 0; i < nodo->claves.getTamanio(); i++) {
+        salida.agregarFinal(nodo->claves[i]);
+    }
+}
+
+ArregloDinamico<Cliente> ArbolBClientes::listarClientes(TipoRecorrido tipo) const {
     ArregloDinamico<Cliente> salida;
-    inordenRec(raiz, salida);
+
+    switch (tipo) {
+        case TipoRecorrido::PREORDEN:
+            preordenRec(raiz, salida);
+            break;
+        case TipoRecorrido::INORDEN:
+            inordenRec(raiz, salida);
+            break;
+        case TipoRecorrido::POSTORDEN:
+            postordenRec(raiz, salida);
+            break;
+    }
+
     return salida;
 }

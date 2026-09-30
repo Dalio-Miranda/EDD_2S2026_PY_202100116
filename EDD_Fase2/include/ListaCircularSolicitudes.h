@@ -50,6 +50,11 @@ public:
     // Un cliente puede tener varias solicitudes con el mismo telefono.
     ArregloDinamico<Solicitud> buscarPorTelefono(const std::string& telefono);
 
+    // Todas las solicitudes registradas, sin filtrar (para mostrarlas
+    // completas al abrir la pestana, antes de que el cliente busque
+    // por telefono).
+    ArregloDinamico<Solicitud> listarTodas() const;
+
     int contarPendientes() const;
 
     void imprimirPendientes() const;

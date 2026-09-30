@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QComboBox>
 #include <QDialog>
 #include <QFormLayout>
 #include <QLineEdit>
@@ -34,15 +35,25 @@ PanelAdminClientes::PanelAdminClientes(ArbolBClientes& clientesRef,
     layoutBotones->addWidget(botonJSON);
     layoutBotones->addStretch();
 
+    QHBoxLayout* layoutRecorrido = new QHBoxLayout();
+    layoutRecorrido->addWidget(new QLabel("Ordenar listado por recorrido:"));
+    comboRecorrido = new QComboBox();
+    comboRecorrido->addItem("Inorden (por ID, ascendente)");
+    comboRecorrido->addItem("Preorden");
+    comboRecorrido->addItem("Postorden");
+    layoutRecorrido->addWidget(comboRecorrido);
+    layoutRecorrido->addStretch();
+
     tablaClientes = new QTableWidget();
-    tablaClientes->setColumnCount(5);
-    tablaClientes->setHorizontalHeaderLabels({"ID", "Nombre", "Correo", "Telefono", "# Reservas"});
+    tablaClientes->setColumnCount(6);
+    tablaClientes->setHorizontalHeaderLabels({"ID", "Nombre", "Correo", "Telefono", "Password", "# Reservas"});
     tablaClientes->horizontalHeader()->setStretchLastSection(true);
     tablaClientes->setSelectionBehavior(QAbstractItemView::SelectRows);
     tablaClientes->setSelectionMode(QAbstractItemView::SingleSelection);
     tablaClientes->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     layoutPrincipal->addLayout(layoutBotones);
+    layoutPrincipal->addLayout(layoutRecorrido);
     layoutPrincipal->addWidget(tablaClientes);
 
     connect(botonAgregar, &QPushButton::clicked, this, &PanelAdminClientes::onAgregarCliente);
@@ -50,10 +61,15 @@ PanelAdminClientes::PanelAdminClientes(ArbolBClientes& clientesRef,
     connect(botonEliminar, &QPushButton::clicked, this, &PanelAdminClientes::onEliminarCliente);
     connect(botonVerReservas, &QPushButton::clicked, this, &PanelAdminClientes::onVerReservas);
     connect(botonJSON, &QPushButton::clicked, this, &PanelAdminClientes::onCargarJSON);
+    connect(comboRecorrido, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PanelAdminClientes::onCambioRecorrido);
 }
 
 void PanelAdminClientes::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
+    actualizarListaClientes();
+}
+
+void PanelAdminClientes::onCambioRecorrido() {
     actualizarListaClientes();
 }
 
@@ -66,7 +82,14 @@ std::string PanelAdminClientes::idSeleccionado() const {
 }
 
 void PanelAdminClientes::actualizarListaClientes() {
-    ArregloDinamico<Cliente> listado = clientes.listarClientes();
+    TipoRecorrido tipo = TipoRecorrido::INORDEN;
+    switch (comboRecorrido->currentIndex()) {
+        case 1: tipo = TipoRecorrido::PREORDEN; break;
+        case 2: tipo = TipoRecorrido::POSTORDEN; break;
+        default: tipo = TipoRecorrido::INORDEN; break;
+    }
+
+    ArregloDinamico<Cliente> listado = clientes.listarClientes(tipo);
 
     tablaClientes->setRowCount(listado.getTamanio());
     for (int i = 0; i < listado.getTamanio(); i++) {
@@ -75,7 +98,8 @@ void PanelAdminClientes::actualizarListaClientes() {
         tablaClientes->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(c.nombre)));
         tablaClientes->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(c.correo)));
         tablaClientes->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(c.telefono)));
-        tablaClientes->setItem(i, 4, new QTableWidgetItem(QString::number(c.codigosReserva.getTamanio())));
+        tablaClientes->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(c.password)));
+        tablaClientes->setItem(i, 5, new QTableWidgetItem(QString::number(c.codigosReserva.getTamanio())));
     }
 }
 
@@ -242,6 +266,8 @@ void PanelAdminClientes::onVerReservas() {
     tabla->horizontalHeader()->setStretchLastSection(true);
     tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tabla->setRowCount(c->codigosReserva.getTamanio());
+
+    
 
     for (int i = 0; i < c->codigosReserva.getTamanio(); i++) {
         const std::string& codigo = c->codigosReserva[i];

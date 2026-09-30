@@ -59,6 +59,15 @@ PanelAdminFunciones2::PanelAdminFunciones2(ArbolAVLFunciones& funcionesRef,
     comboRecorrido->addItem("Preorden");
     comboRecorrido->addItem("Postorden");
     layoutRecorrido->addWidget(comboRecorrido);
+
+    layoutRecorrido->addSpacing(20);
+    layoutRecorrido->addWidget(new QLabel("Buscar por codigo_funcion:"));
+    campoBusqueda = new QLineEdit();
+    campoBusqueda->setPlaceholderText("Ej: F001");
+    campoBusqueda->setMaximumWidth(120);
+    QPushButton* botonBuscar = new QPushButton("Buscar");
+    layoutRecorrido->addWidget(campoBusqueda);
+    layoutRecorrido->addWidget(botonBuscar);
     layoutRecorrido->addStretch();
 
     tablaFunciones = new QTableWidget();
@@ -98,6 +107,8 @@ PanelAdminFunciones2::PanelAdminFunciones2(ArbolAVLFunciones& funcionesRef,
     connect(botonCargarActiva, &QPushButton::clicked, this, &PanelAdminFunciones2::onCargarFuncionActiva);
     connect(botonJSON, &QPushButton::clicked, this, &PanelAdminFunciones2::onCargarJSON);
     connect(comboRecorrido, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PanelAdminFunciones2::onCambioRecorrido);
+    connect(botonBuscar, &QPushButton::clicked, this, &PanelAdminFunciones2::onBuscarFuncion);
+    connect(campoBusqueda, &QLineEdit::returnPressed, this, &PanelAdminFunciones2::onBuscarFuncion);
 }
 
 void PanelAdminFunciones2::showEvent(QShowEvent* event) {
@@ -116,6 +127,49 @@ std::string PanelAdminFunciones2::codigoSeleccionado() const {
     int fila = seleccion.first().row();
     QTableWidgetItem* item = tablaFunciones->item(fila, 0);
     return item != nullptr ? item->text().toStdString() : "";
+}
+
+void PanelAdminFunciones2::seleccionarFilaPorCodigo(const std::string& codigo) {
+    for (int fila = 0; fila < tablaFunciones->rowCount(); fila++) {
+        QTableWidgetItem* item = tablaFunciones->item(fila, 0);
+        if (item != nullptr && item->text().toStdString() == codigo) {
+            tablaFunciones->selectRow(fila);
+            tablaFunciones->scrollToItem(item);
+            return;
+        }
+    }
+}
+
+void PanelAdminFunciones2::onBuscarFuncion() {
+    std::string codigo = campoBusqueda->text().trimmed().toStdString();
+    if (codigo.empty()) {
+        QMessageBox::information(this, "Buscar funcion", "Ingresa un codigo_funcion para buscar (ej. F001).");
+        return;
+    }
+
+    // Busqueda directa sobre el Arbol AVL, indexado por codigo_funcion:
+    // esto es lo que da la ventaja O(log n) frente a recorrer la
+    // tabla completa (enunciado 4.1, "Buscar funcion por codigo").
+    Funcion* f = funciones.buscar(codigo);
+    if (f == nullptr) {
+        QMessageBox::information(this, "Sin resultados",
+            QString("No existe ninguna funcion con codigo '%1'.").arg(QString::fromStdString(codigo)));
+        return;
+    }
+
+    std::string tituloPelicula = f->codigoPelicula;
+    Pelicula* p = cartelera.buscar(f->codigoPelicula);
+    if (p != nullptr) tituloPelicula = p->codigo + " - " + p->titulo;
+
+    QMessageBox::information(this, "Funcion encontrada",
+        QString("Codigo: %1\nPelicula: %2\nHorario: %3\nSala: %4\nFilas x Columnas: %5 x %6")
+            .arg(QString::fromStdString(f->codigoFuncion))
+            .arg(QString::fromStdString(tituloPelicula))
+            .arg(QString::fromStdString(f->horario))
+            .arg(QString::fromStdString(f->sala))
+            .arg(f->filas).arg(f->columnas));
+
+    seleccionarFilaPorCodigo(codigo);
 }
 
 void PanelAdminFunciones2::actualizarListaFunciones() {

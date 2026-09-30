@@ -4,6 +4,7 @@
 #include <string>
 #include "ArregloDinamico.h"
 #include "Cliente.h"
+#include "TipoRecorrido.h"
 
 // Arbol B de orden 4: grado minimo t = 2.
 //   - Maximo de claves por nodo:  2t - 1 = 3
@@ -49,6 +50,14 @@ private:
     void liberar(NodoB* nodo);
     void inordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const;
 
+    // Generalizacion de preorden/postorden para un arbol multi-via
+    // (cada nodo tiene varias claves, no solo una): preorden visita
+    // TODAS las claves del nodo actual (en orden) y luego recorre
+    // cada hijo; postorden recorre cada hijo primero y luego visita
+    // las claves del nodo actual.
+    void preordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const;
+    void postordenRec(NodoB* nodo, ArregloDinamico<Cliente>& salida) const;
+
 public:
     ArbolBClientes();
     ~ArbolBClientes();
@@ -66,7 +75,11 @@ public:
     int getTamanio() const;
     bool estaVacio() const;
 
-    ArregloDinamico<Cliente> listarClientes() const;
+    // Listado con el recorrido solicitado (enunciado 4.1, "Gestionar
+    // clientes": preorden, inorden y postorden). INORDEN es el
+    // equivalente natural de un BST (clientes ordenados por id); los
+    // otros dos son la generalizacion multi-via descrita arriba.
+    ArregloDinamico<Cliente> listarClientes(TipoRecorrido tipo = TipoRecorrido::INORDEN) const;
 
     NodoB* getRaiz() const;
 };

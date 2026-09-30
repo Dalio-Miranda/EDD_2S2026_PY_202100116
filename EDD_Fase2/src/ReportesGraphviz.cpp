@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 #include "ArregloDinamico.h"
 
 namespace ReportesGraphviz {
@@ -51,6 +52,16 @@ static int diasHastaFecha(const std::string& fecha) {
 static void ejecutarDot(const std::string& contenidoDot, const std::string& rutaBase) {
     std::string rutaDot = rutaBase + ".dot";
     std::string rutaPng = rutaBase + ".png";
+
+    // Crea la carpeta contenedora si no existe. Git no versiona
+    // carpetas vacias, asi que "reports/" puede faltar despues de
+    // clonar o descomprimir el repo si no se subio ningun archivo
+    // adentro; esto hace que el programa se recupere solo en vez de
+    // fallar con "No se pudo crear el archivo".
+    std::filesystem::path carpeta = std::filesystem::path(rutaDot).parent_path();
+    if (!carpeta.empty()) {
+        std::filesystem::create_directories(carpeta);
+    }
 
     std::ofstream archivo(rutaDot);
     if (!archivo.is_open()) {

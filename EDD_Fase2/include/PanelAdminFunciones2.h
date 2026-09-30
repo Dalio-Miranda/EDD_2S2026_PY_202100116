@@ -5,6 +5,7 @@
 #include <QTableWidget>
 #include <QComboBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QGridLayout>
 #include "ArbolAVLFunciones.h"
 #include "ArbolBinarioPeliculas.h"
@@ -34,6 +35,7 @@ private slots:
     void onCargarJSON();
     void onCambioRecorrido();
     void onClickAsiento(int fila, int columna);
+    void onBuscarFuncion();
 
 private:
     ArbolAVLFunciones& funciones;
@@ -44,6 +46,7 @@ private:
 
     QTableWidget* tablaFunciones;
     QComboBox* comboRecorrido;
+    QLineEdit* campoBusqueda;
     QLabel* labelInfoActiva;
     QWidget* contenedorGrilla;
     QGridLayout* layoutGrilla;
@@ -53,6 +56,7 @@ private:
     void limpiarGrilla();
     std::string generarCodigoFuncionUnico() const;
     std::string codigoSeleccionado() const;
+    void seleccionarFilaPorCodigo(const std::string& codigo);
 };
 
 #endif // PANEL_ADMIN_FUNCIONES2_H

@@ -129,6 +129,18 @@ ArregloDinamico<Solicitud> ListaCircularSolicitudes::buscarPorTelefono(const std
     return resultado;
 }
 
+ArregloDinamico<Solicitud> ListaCircularSolicitudes::listarTodas() const {
+    ArregloDinamico<Solicitud> resultado;
+    if (ultimo == nullptr) return resultado;
+
+    NodoSolicitud* actual = ultimo->siguiente;
+    for (int i = 0; i < tamanio; i++) {
+        resultado.agregarFinal(actual->dato);
+        actual = actual->siguiente;
+    }
+    return resultado;
+}
+
 int ListaCircularSolicitudes::contarPendientes() const {
     if (ultimo == nullptr) return 0;
 
