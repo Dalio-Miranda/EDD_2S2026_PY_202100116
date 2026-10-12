@@ -1,10 +1,12 @@
 #include "ReportesGraphviz.h"
+#include "ArbolMerkle.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 #include "ArregloDinamico.h"
 
 namespace ReportesGraphviz {
@@ -51,6 +53,16 @@ static int diasHastaFecha(const std::string& fecha) {
 static void ejecutarDot(const std::string& contenidoDot, const std::string& rutaBase) {
     std::string rutaDot = rutaBase + ".dot";
     std::string rutaPng = rutaBase + ".png";
+
+    // Crea la carpeta contenedora si no existe. Git no versiona
+    // carpetas vacias, asi que "reports/" puede faltar despues de
+    // clonar o descomprimir el repo si no se subio ningun archivo
+    // adentro; esto hace que el programa se recupere solo en vez de
+    // fallar con "No se pudo crear el archivo".
+    std::filesystem::path carpeta = std::filesystem::path(rutaDot).parent_path();
+    if (!carpeta.empty()) {
+        std::filesystem::create_directories(carpeta);
+    }
 
     std::ofstream archivo(rutaDot);
     if (!archivo.is_open()) {
@@ -529,6 +541,194 @@ void generarReporteMatrizAsientosPorFuncion(GestorAsientosPorFuncion& gestor,
     dot << "}\n";
 
     ejecutarDot(dot.str(), carpetaReportes + "/reporte_matriz_asientos_funcion");
+}
+
+// ===================== Reporte Fase 3: Blockchain =====================
+
+static std::string abreviarHash(const std::string& hash) {
+    if (hash.size() <= 14) return hash;
+    return hash.substr(0, 12) + "...";
+}
+
+void generarReporteBlockchain(const Blockchain& blockchain, const std::string& carpetaReportes) {
+    const ArregloDinamico<Bloque>& cadena = blockchain.getCadenaEnDisco();
+    const ArregloDinamico<bool>& integra = blockchain.getCadenaEnDiscoIntegra();
+
+    std::ostringstream dot;
+    dot << "digraph Blockchain {\n";
+    dot << "    rankdir=LR;\n";
+    dot << "    node [shape=box, style=filled, fontname=\"Arial\", fontsize=10];\n";
+
+    if (cadena.estaVacio()) {
+        dot << "    vacio [label=\"La blockchain no tiene bloques todavia\", shape=plaintext];\n";
+    } else {
+        int invalidos = 0;
+        // Lista enlazada con insercion por delante: el bloque MAS
+        // RECIENTE se dibuja primero (a la izquierda) y cada flecha
+        // apunta hacia el bloque anterior de la cadena.
+        for (int i = cadena.getTamanio() - 1; i >= 0; i--) {
+            const Bloque& b = cadena[i];
+            bool ok = integra[i];
+            if (!ok) invalidos++;
+
+            dot << "    b" << i << " [fillcolor=\"" << (ok ? "#8BE28B" : "#F4A6A6") << "\", label=\""
+                << "INDEX: " << b.index
+                << "\\nNONCE: " << b.nonce
+                << "\\nHASH: " << abreviarHash(b.hash)
+                << "\\nPREV: " << abreviarHash(b.previousHash)
+                << "\\n" << (ok ? "INTEGRO" : "MANIPULADO") << "\"];\n";
+            if (i > 0) {
+                dot << "    b" << i << " -> b" << (i - 1) << ";\n";
+            }
+        }
+        dot << "    labelloc=\"t\";\n";
+        dot << "    label=\"Bloques: " << cadena.getTamanio() << "  |  Integros (verde): "
+            << (cadena.getTamanio() - invalidos) << "  |  Manipulados (rojo): " << invalidos << "\";\n";
+    }
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_blockchain");
+}
+
+// ===================== Reporte Fase 3: Arbol de Merkle =====================
+
+static void escribirNodoMerkle(NodoMerkle* nodo, bool esRaiz, int& contador, std::ostringstream& dot, std::string& idOut) {
+    idOut = "m" + std::to_string(contador++);
+
+    std::string etiqueta;
+    std::string color;
+    std::string estilo = "filled";
+
+    if (nodo->esHoja) {
+        etiqueta = nodo->codigoTransaccion.empty() ? std::string("(sin transacciones)") : nodo->codigoTransaccion;
+        etiqueta += "\\n" + abreviarHash(nodo->hash);
+        color = "#FFE066";
+    } else {
+        etiqueta = abreviarHash(nodo->hash);
+        color = "#A9D6E5";
+    }
+    if (esRaiz) {
+        etiqueta = "ROOTMERKLE\\n" + abreviarHash(nodo->hash) + (nodo->esHoja ? "\\n" + (nodo->codigoTransaccion.empty() ? std::string("") : nodo->codigoTransaccion) : std::string(""));
+        color = "#8BE28B";
+    }
+    if (nodo->esDuplicado) {
+        etiqueta += "\\n(copia por nivel impar)";
+        estilo = "filled,dashed";
+    }
+
+    dot << "    " << idOut << " [label=\"" << etiqueta << "\", fillcolor=\"" << color << "\", style=\"" << estilo << "\"];\n";
+
+    if (nodo->izquierdo != nullptr) {
+        std::string idHijo;
+        escribirNodoMerkle(nodo->izquierdo, false, contador, dot, idHijo);
+        dot << "    " << idOut << " -> " << idHijo << ";\n";
+    }
+    if (nodo->derecho != nullptr) {
+        std::string idHijo;
+        escribirNodoMerkle(nodo->derecho, false, contador, dot, idHijo);
+        dot << "    " << idOut << " -> " << idHijo << ";\n";
+    }
+}
+
+void generarReporteMerkle(const Bloque& bloque, const std::string& carpetaReportes) {
+    ArbolMerkle arbol;
+    arbol.construir(bloque.data);
+
+    std::ostringstream dot;
+    dot << "digraph Merkle {\n";
+    dot << "    rankdir=TB;\n";
+    dot << "    node [shape=box, fontname=\"Arial\", fontsize=10];\n";
+
+    int contador = 0;
+    std::string idRaiz;
+    escribirNodoMerkle(arbol.getRaiz(), true, contador, dot, idRaiz);
+
+    dot << "    labelloc=\"t\";\n";
+    dot << "    label=\"Arbol de Merkle - Bloque #" << bloque.index
+        << "  (" << bloque.data.getTamanio() << " transaccion(es))\";\n";
+    dot << "}\n";
+
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_merkle");
+}
+
+
+// ===================== Fase 3: Grafo de sedes =====================
+
+void generarReporteGrafoSedes(const GrafoSedes& grafo, const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    // Grafo NO dirigido => "graph" y aristas "--".
+    dot << "graph GrafoSedes {\n";
+    dot << "    layout=circo;\n    splines=true;\n    mindist=1.2;\n";
+    dot << "    node [shape=box, style=\"rounded,filled\", fillcolor=\"#CFE8FF\", fontname=\"Arial\", fontsize=10];\n";
+    dot << "    edge [fontname=\"Arial\", fontsize=12, color=\"#34495E\"];\n";
+
+    int n = grafo.getCantidadVertices();
+    for (int i = 0; i < n; i++) {
+        const Sede& s = grafo.getVertice(i)->dato;
+        dot << "    \"" << escapar(s.codigo) << "\" [label=\"" << escapar(s.codigo)
+            << "\\n" << escapar(s.nombre)
+            << "\\n" << escapar(s.direccion)
+            << "\\nSalas: " << s.cantidadSalas
+            << "\\nTel: " << escapar(s.telefono) << "\"];\n";
+    }
+
+    // Cada arista se dibuja UNA sola vez (solo cuando codigo < vecino).
+    for (int i = 0; i < n; i++) {
+        NodoGrafoSede* v = grafo.getVertice(i);
+        for (int j = 0; j < v->aristas.getTamanio(); j++) {
+            const Arista& a = v->aristas[j];
+            if (v->dato.codigo < a.sedeVecina) {
+                dot << "    \"" << escapar(v->dato.codigo) << "\" -- \""
+                    << escapar(a.sedeVecina) << "\" [label=\"" << a.peso
+                    << "\", penwidth=" << (1 + a.peso) << "];\n";
+            }
+        }
+    }
+
+    dot << "    labelloc=\"t\";\n    label=\"Grafo no dirigido de sedes (peso = peliculas en comun)\";\n";
+    dot << "}\n";
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_grafo_sedes");
+}
+
+// ===================== Fase 3: Lista de adyacencia =====================
+
+void generarReporteListaAdyacencia(const GrafoSedes& grafo, const std::string& carpetaReportes) {
+    std::ostringstream dot;
+    dot << "digraph ListaAdyacencia {\n";
+    dot << "    rankdir=LR;\n    nodesep=0.3;\n";
+    dot << "    node [shape=box, fontname=\"Arial\", fontsize=10];\n";
+
+    int n = grafo.getCantidadVertices();
+    for (int i = 0; i < n; i++) {
+        NodoGrafoSede* v = grafo.getVertice(i);
+        std::string cod = escapar(v->dato.codigo);
+        std::string idV = "v" + std::to_string(i);
+        dot << "    " << idV << " [label=\"" << cod << "\\n" << escapar(v->dato.nombre)
+            << "\", style=filled, fillcolor=\"#CFE8FF\"];\n";
+
+        std::string anterior = idV;
+        for (int j = 0; j < v->aristas.getTamanio(); j++) {
+            const Arista& a = v->aristas[j];
+            std::string idA = "a" + std::to_string(i) + "_" + std::to_string(j);
+            dot << "    " << idA << " [label=\"" << escapar(a.sedeVecina)
+                << "\\npeso: " << a.peso << "\", style=filled, fillcolor=\"#FFF3B0\"];\n";
+            dot << "    " << anterior << " -> " << idA << ";\n";
+            anterior = idA;
+        }
+    }
+    // Todos los vertices en la misma columna (como las filas de una tabla),
+    // encadenados con aristas invisibles para conservar su orden.
+    if (n > 0) {
+        dot << "    { rank=same;";
+        for (int i = 0; i < n; i++) dot << " v" << i << ";";
+        dot << " }\n";
+        for (int i = 1; i < n; i++)
+            dot << "    v" << (i - 1) << " -> v" << i << " [style=invis];\n";
+    }
+
+    dot << "    labelloc=\"t\";\n    label=\"Lista de adyacencia del grafo de sedes\";\n";
+    dot << "}\n";
+    ejecutarDot(dot.str(), carpetaReportes + "/reporte_lista_adyacencia");
 }
 
 } // namespace ReportesGraphviz

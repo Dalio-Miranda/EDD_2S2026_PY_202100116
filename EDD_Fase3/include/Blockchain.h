@@ -34,7 +34,16 @@ private:
 
     ArregloDinamico<Transaccion> pendientes;
 
+    // Estado de la cadena TAL COMO ESTA EN DISCO (blocks/): cada bloque
+    // leido, mas si su integridad propia es valida. Sirve para el
+    // reporte verde/rojo (enunciado: "Proteccion de datos"): un bloque
+    // manipulado a mano en su JSON aparece en rojo aunque no se cargue
+    // a memoria. Se mantiene al dia cuando se generan bloques nuevos.
+    ArregloDinamico<Bloque> cadenaEnDisco;
+    ArregloDinamico<bool> cadenaEnDiscoIntegra;
+
     void insertarAlFrente(const Bloque& b);
+    void registrarEnCadenaDisco(const Bloque& b, bool integro);
     void persistirBloque(const Bloque& b) const;
     void liberarCadena();
 
@@ -80,6 +89,23 @@ public:
     // retorna false si no hay ninguna pendiente.
     bool generarBloque();
 
+    // Verificacion de integridad PROPIA de un bloque (sin mirar a su
+    // vecino): el HASH almacenado coincide con el recalculado, y el
+    // ROOTMERKLE almacenado coincide con la raiz de Merkle recalculada
+    // a partir de su DATA actual.
+    static bool bloqueEsIntegro(const Bloque& b);
+
+    // Genera un codigo de transaccion que no exista todavia ni en la
+    // cadena ni en la cola de pendientes (formato T001, T002, ...).
+    std::string generarCodigoTransaccion() const;
+
+    ArregloDinamico<Transaccion> getPendientes() const;
+
+    // Estado de blocks/ tal como se leyo/escribio (ver comentario de
+    // los miembros). Ambos arreglos tienen siempre el mismo tamanio.
+    const ArregloDinamico<Bloque>& getCadenaEnDisco() const;
+    const ArregloDinamico<bool>& getCadenaEnDiscoIntegra() const;
+
     bool hayBloques() const;
     int getCantidadBloques() const;
     Bloque* getUltimoBloque() const;
@@ -115,6 +141,20 @@ public:
         double montoTotal = 0.0;
     };
     ResumenVentas calcularVentasTotales() const;
+
+    // Desglose de las ventas por una clave (codigo de funcion o fecha
+    // de pago), recorriendo el DATA de todos los bloques.
+    struct LineaDesglose {
+        std::string clave;
+        int boletos = 0;
+        double monto = 0.0;
+    };
+    ArregloDinamico<LineaDesglose> desglosePorFuncion() const;
+    ArregloDinamico<LineaDesglose> desglosePorFecha() const;
+
+private:
+    ArregloDinamico<LineaDesglose> desglosar(bool porFuncion) const;
+public:
 };
 
 #endif // BLOCKCHAIN_H

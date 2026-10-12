@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QStackedWidget>
+#include <QCloseEvent>
 
 #include "ArbolBinarioPeliculas.h"
 #include "ListaCircularPromociones.h"
@@ -12,6 +13,8 @@
 #include "ArbolBClientes.h"
 #include "TablaHashReservas.h"
 #include "GestorAsientosPorFuncion.h"
+#include "GrafoSedes.h"
+#include "Blockchain.h"
 
 // Ventana principal del sistema. Contiene un QStackedWidget que
 // alterna entre la pantalla de inicio, el panel de administrador
@@ -23,6 +26,11 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(QWidget* parent = nullptr);
+
+protected:
+    // Fase 3: al cerrar la ventana se serializa el estado actual de
+    // sedes, peliculas y funciones y se comprime con LZW a los .edd.
+    void closeEvent(QCloseEvent* event) override;
 
 private:
     QStackedWidget* pilaPantallas;
@@ -38,6 +46,10 @@ private:
     ArbolBClientes arbolClientes;
     TablaHashReservas tablaReservas;
     GestorAsientosPorFuncion gestorAsientos;
+
+    // Estructura nueva de Fase 3.
+    GrafoSedes grafoSedes;
+    Blockchain blockchain{"../blocks"}; // carpeta blocks/ en la raiz del proyecto (como reports/)
 
     QWidget* crearPantallaInicio();
     QWidget* crearPlaceholder(const QString& texto);

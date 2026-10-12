@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTableWidget>
+#include <QComboBox>
 #include "ArbolBClientes.h"
 #include "TablaHashReservas.h"
 
@@ -23,12 +24,14 @@ private slots:
     void onEliminarCliente();
     void onVerReservas();
     void onCargarJSON();
+    void onCambioRecorrido();
 
 private:
     ArbolBClientes& clientes;
     TablaHashReservas& reservas;
 
     QTableWidget* tablaClientes;
+    QComboBox* comboRecorrido;
 
     void actualizarListaClientes();
     std::string idSeleccionado() const;

@@ -33,9 +33,10 @@ PanelAdminFunciones2::PanelAdminFunciones2(ArbolAVLFunciones& funcionesRef,
                                             GestorAsientosPorFuncion& gestorRef,
                                             TablaHashReservas& reservasRef,
                                             ArbolBClientes& clientesRef,
+                                            GrafoSedes& grafoRef,
                                             QWidget* parent)
     : QWidget(parent), funciones(funcionesRef), cartelera(carteleraRef),
-      gestor(gestorRef), reservas(reservasRef), clientes(clientesRef) {
+      gestor(gestorRef), reservas(reservasRef), clientes(clientesRef), grafo(grafoRef) {
 
     QVBoxLayout* layoutPrincipal = new QVBoxLayout(this);
 
@@ -59,11 +60,20 @@ PanelAdminFunciones2::PanelAdminFunciones2(ArbolAVLFunciones& funcionesRef,
     comboRecorrido->addItem("Preorden");
     comboRecorrido->addItem("Postorden");
     layoutRecorrido->addWidget(comboRecorrido);
+
+    layoutRecorrido->addSpacing(20);
+    layoutRecorrido->addWidget(new QLabel("Buscar por codigo_funcion:"));
+    campoBusqueda = new QLineEdit();
+    campoBusqueda->setPlaceholderText("Ej: F001");
+    campoBusqueda->setMaximumWidth(120);
+    QPushButton* botonBuscar = new QPushButton("Buscar");
+    layoutRecorrido->addWidget(campoBusqueda);
+    layoutRecorrido->addWidget(botonBuscar);
     layoutRecorrido->addStretch();
 
     tablaFunciones = new QTableWidget();
-    tablaFunciones->setColumnCount(6);
-    tablaFunciones->setHorizontalHeaderLabels({"Codigo", "Pelicula", "Horario", "Sala", "Filas x Columnas", "Archivo Asientos"});
+    tablaFunciones->setColumnCount(8);
+    tablaFunciones->setHorizontalHeaderLabels({"Codigo", "Pelicula", "Sede", "Fecha", "Horario", "Sala", "Filas x Columnas", "Archivo Asientos"});
     tablaFunciones->horizontalHeader()->setStretchLastSection(true);
     tablaFunciones->setSelectionBehavior(QAbstractItemView::SelectRows);
     tablaFunciones->setSelectionMode(QAbstractItemView::SingleSelection);
@@ -98,6 +108,8 @@ PanelAdminFunciones2::PanelAdminFunciones2(ArbolAVLFunciones& funcionesRef,
     connect(botonCargarActiva, &QPushButton::clicked, this, &PanelAdminFunciones2::onCargarFuncionActiva);
     connect(botonJSON, &QPushButton::clicked, this, &PanelAdminFunciones2::onCargarJSON);
     connect(comboRecorrido, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PanelAdminFunciones2::onCambioRecorrido);
+    connect(botonBuscar, &QPushButton::clicked, this, &PanelAdminFunciones2::onBuscarFuncion);
+    connect(campoBusqueda, &QLineEdit::returnPressed, this, &PanelAdminFunciones2::onBuscarFuncion);
 }
 
 void PanelAdminFunciones2::showEvent(QShowEvent* event) {
@@ -116,6 +128,49 @@ std::string PanelAdminFunciones2::codigoSeleccionado() const {
     int fila = seleccion.first().row();
     QTableWidgetItem* item = tablaFunciones->item(fila, 0);
     return item != nullptr ? item->text().toStdString() : "";
+}
+
+void PanelAdminFunciones2::seleccionarFilaPorCodigo(const std::string& codigo) {
+    for (int fila = 0; fila < tablaFunciones->rowCount(); fila++) {
+        QTableWidgetItem* item = tablaFunciones->item(fila, 0);
+        if (item != nullptr && item->text().toStdString() == codigo) {
+            tablaFunciones->selectRow(fila);
+            tablaFunciones->scrollToItem(item);
+            return;
+        }
+    }
+}
+
+void PanelAdminFunciones2::onBuscarFuncion() {
+    std::string codigo = campoBusqueda->text().trimmed().toStdString();
+    if (codigo.empty()) {
+        QMessageBox::information(this, "Buscar funcion", "Ingresa un codigo_funcion para buscar (ej. F001).");
+        return;
+    }
+
+    // Busqueda directa sobre el Arbol AVL, indexado por codigo_funcion:
+    // esto es lo que da la ventaja O(log n) frente a recorrer la
+    // tabla completa (enunciado 4.1, "Buscar funcion por codigo").
+    Funcion* f = funciones.buscar(codigo);
+    if (f == nullptr) {
+        QMessageBox::information(this, "Sin resultados",
+            QString("No existe ninguna funcion con codigo '%1'.").arg(QString::fromStdString(codigo)));
+        return;
+    }
+
+    std::string tituloPelicula = f->codigoPelicula;
+    Pelicula* p = cartelera.buscar(f->codigoPelicula);
+    if (p != nullptr) tituloPelicula = p->codigo + " - " + p->titulo;
+
+    QMessageBox::information(this, "Funcion encontrada",
+        QString("Codigo: %1\nPelicula: %2\nHorario: %3\nSala: %4\nFilas x Columnas: %5 x %6")
+            .arg(QString::fromStdString(f->codigoFuncion))
+            .arg(QString::fromStdString(tituloPelicula))
+            .arg(QString::fromStdString(f->horario))
+            .arg(QString::fromStdString(f->sala))
+            .arg(f->filas).arg(f->columnas));
+
+    seleccionarFilaPorCodigo(codigo);
 }
 
 void PanelAdminFunciones2::actualizarListaFunciones() {
@@ -138,10 +193,12 @@ void PanelAdminFunciones2::actualizarListaFunciones() {
 
         tablaFunciones->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(f.codigoFuncion)));
         tablaFunciones->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(tituloPelicula)));
-        tablaFunciones->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(f.horario)));
-        tablaFunciones->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(f.sala)));
-        tablaFunciones->setItem(i, 4, new QTableWidgetItem(QString("%1 x %2").arg(f.filas).arg(f.columnas)));
-        tablaFunciones->setItem(i, 5, new QTableWidgetItem(
+        tablaFunciones->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(f.codigoSede.empty() ? "(sin sede)" : f.codigoSede)));
+        tablaFunciones->setItem(i, 3, new QTableWidgetItem(QString::fromStdString(f.fecha)));
+        tablaFunciones->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(f.horario)));
+        tablaFunciones->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(f.sala)));
+        tablaFunciones->setItem(i, 6, new QTableWidgetItem(QString("%1 x %2").arg(f.filas).arg(f.columnas)));
+        tablaFunciones->setItem(i, 7, new QTableWidgetItem(
             f.archivoAsientos.empty() ? "(sin archivo)" : QString::fromStdString(f.archivoAsientos)));
     }
 }
@@ -165,9 +222,14 @@ void PanelAdminFunciones2::onCrearFuncion() {
         QMessageBox::warning(this, "Sin peliculas", "Primero agrega peliculas a la cartelera.");
         return;
     }
+    if (grafo.getCantidadSedes() == 0) {
+        QMessageBox::warning(this, "Sin sedes",
+            "Primero registra al menos una sede (pestana 'Sedes'): toda funcion debe proyectarse en una sede.");
+        return;
+    }
 
     QDialog dialogo(this);
-    dialogo.setWindowTitle("Crear Funcion (Fase 2)");
+    dialogo.setWindowTitle("Crear Funcion");
     QFormLayout* formulario = new QFormLayout(&dialogo);
 
     QComboBox* campoPelicula = new QComboBox();
@@ -175,6 +237,16 @@ void PanelAdminFunciones2::onCrearFuncion() {
         campoPelicula->addItem(QString::fromStdString(p.codigo + " - " + p.titulo), QString::fromStdString(p.codigo));
     }
 
+    // Fase 3: la sede es OBLIGATORIA (la funcion es lo que conecta una
+    // pelicula con un vertice del grafo).
+    QComboBox* campoSede = new QComboBox();
+    ArregloDinamico<Sede> sedes = grafo.listarSedes();
+    for (const Sede& sd : sedes) {
+        campoSede->addItem(QString::fromStdString(sd.codigo + " - " + sd.nombre), QString::fromStdString(sd.codigo));
+    }
+
+    QLineEdit* campoFecha = new QLineEdit(QString::fromStdString(PersistenciaJSON::fechaHoy()));
+    campoFecha->setPlaceholderText("YYYY-MM-DD");
     QLineEdit* campoHorario = new QLineEdit("17:00");
     QLineEdit* campoSala = new QLineEdit("Sala 1");
 
@@ -187,6 +259,8 @@ void PanelAdminFunciones2::onCrearFuncion() {
     campoColumnas->setValue(15);
 
     formulario->addRow("Pelicula:", campoPelicula);
+    formulario->addRow("Sede:", campoSede);
+    formulario->addRow("Fecha:", campoFecha);
     formulario->addRow("Horario:", campoHorario);
     formulario->addRow("Sala:", campoSala);
     formulario->addRow("Numero de filas:", campoFilas);
@@ -206,13 +280,25 @@ void PanelAdminFunciones2::onCrearFuncion() {
             return;
         }
 
+        std::string fecha = campoFecha->text().trimmed().toStdString();
+        if (!PersistenciaJSON::esFechaValida(fecha)) {
+            QMessageBox::warning(this, "Fecha invalida", "La fecha debe tener el formato YYYY-MM-DD y ser una fecha real.");
+            return;
+        }
+
         std::string codigoPelicula = campoPelicula->currentData().toString().toStdString();
+        std::string codigoSede = campoSede->currentData().toString().toStdString();
         std::string codigoFuncion = generarCodigoFuncionUnico();
         std::string archivo = Funcion::nombreArchivoPara(codigoFuncion);
 
         Funcion f(codigoFuncion, codigoPelicula, horario, sala,
-                  campoFilas->value(), campoColumnas->value(), archivo);
+                  campoFilas->value(), campoColumnas->value(), archivo, codigoSede, fecha);
         funciones.insertar(f);
+
+        // Fase 3: al guardar la funcion se recalcula la interseccion de
+        // catalogo de esa sede contra todas las demas (crea/actualiza/
+        // elimina aristas). Es la unica via por la que el grafo cambia.
+        grafo.recalcularRelacionesDeSede(codigoSede, funciones);
 
         gestor.cargarFuncion(codigoFuncion, funciones);
         gestor.persistirActiva();
@@ -238,11 +324,23 @@ void PanelAdminFunciones2::onEditarFuncion() {
     dialogo.setWindowTitle("Editar Funcion " + QString::fromStdString(codigo));
     QFormLayout* formulario = new QFormLayout(&dialogo);
 
+    QComboBox* campoSedeEd = new QComboBox();
+    {
+        ArregloDinamico<Sede> sedes = grafo.listarSedes();
+        for (const Sede& sd : sedes) {
+            campoSedeEd->addItem(QString::fromStdString(sd.codigo + " - " + sd.nombre), QString::fromStdString(sd.codigo));
+        }
+        int idx = campoSedeEd->findData(QString::fromStdString(f->codigoSede));
+        if (idx >= 0) campoSedeEd->setCurrentIndex(idx);
+    }
+    QLineEdit* campoFechaEd = new QLineEdit(QString::fromStdString(f->fecha));
     QLineEdit* campoHorario = new QLineEdit(QString::fromStdString(f->horario));
     QLineEdit* campoSala = new QLineEdit(QString::fromStdString(f->sala));
 
     QLabel* labelDimensiones = new QLabel(QString("%1 x %2 (no editable)").arg(f->filas).arg(f->columnas));
 
+    formulario->addRow("Sede:", campoSedeEd);
+    formulario->addRow("Fecha:", campoFechaEd);
     formulario->addRow("Horario:", campoHorario);
     formulario->addRow("Sala:", campoSala);
     formulario->addRow("Filas x Columnas:", labelDimensiones);
@@ -261,10 +359,27 @@ void PanelAdminFunciones2::onEditarFuncion() {
             return;
         }
 
+        std::string fechaNueva = campoFechaEd->text().trimmed().toStdString();
+        if (!PersistenciaJSON::esFechaValida(fechaNueva)) {
+            QMessageBox::warning(this, "Fecha invalida", "La fecha debe tener el formato YYYY-MM-DD y ser una fecha real.");
+            return;
+        }
+
+        std::string sedeAnterior = f->codigoSede;
+        std::string sedeNueva = campoSedeEd->currentData().toString().toStdString();
+
         Funcion actualizado = *f;
         actualizado.horario = horario;
         actualizado.sala = sala;
+        actualizado.fecha = fechaNueva;
+        actualizado.codigoSede = sedeNueva;
         funciones.editar(codigo, actualizado);
+
+        // Editar una funcion puede cambiar el catalogo de su sede (y,
+        // si se movio de sede, tambien el de la sede anterior): se
+        // recalculan ambas.
+        if (!sedeAnterior.empty()) grafo.recalcularRelacionesDeSede(sedeAnterior, funciones);
+        if (sedeNueva != sedeAnterior) grafo.recalcularRelacionesDeSede(sedeNueva, funciones);
 
         actualizarListaFunciones();
         QMessageBox::information(this, "Funcion editada", "Los cambios se guardaron correctamente.");
@@ -283,8 +398,15 @@ void PanelAdminFunciones2::onEliminarFuncion() {
             .arg(QString::fromStdString(codigo)));
 
     if (respuesta == QMessageBox::Yes) {
+        std::string sedeDeLaFuncion;
+        if (Funcion* fEliminar = funciones.buscar(codigo)) sedeDeLaFuncion = fEliminar->codigoSede;
+
         gestor.eliminarArchivoFuncion(codigo);
         funciones.eliminar(codigo);
+
+        // Si era la unica funcion de una pelicula en esa sede, la
+        // arista con otras sedes puede bajar de peso o desaparecer.
+        if (!sedeDeLaFuncion.empty()) grafo.recalcularRelacionesDeSede(sedeDeLaFuncion, funciones);
 
         actualizarListaFunciones();
         dibujarGrilla();
@@ -313,7 +435,7 @@ void PanelAdminFunciones2::onCargarJSON() {
                                                  QString(), "Archivos JSON (*.json)");
     if (ruta.isEmpty()) return;
 
-    ResultadoCarga r = PersistenciaJSON::cargarPeliculasYFunciones(ruta.toStdString(), cartelera, funciones);
+    ResultadoCarga r = PersistenciaJSON::cargarPeliculasYFunciones(ruta.toStdString(), cartelera, funciones, grafo);
 
     if (r.huboErrorFatal) {
         QMessageBox::critical(this, "Error al leer el archivo",

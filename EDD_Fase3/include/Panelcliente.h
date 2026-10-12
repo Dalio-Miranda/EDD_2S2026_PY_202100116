@@ -12,6 +12,8 @@
 #include "ArbolBClientes.h"
 #include "TablaHashReservas.h"
 #include "GestorAsientosPorFuncion.h"
+#include "GrafoSedes.h"
+#include "Blockchain.h"
 
 class PanelCliente : public QWidget {
     Q_OBJECT
@@ -25,6 +27,8 @@ public:
                  ArbolBClientes& arbolClientes,
                  TablaHashReservas& tablaReservas,
                  GestorAsientosPorFuncion& gestorAsientos,
+                 GrafoSedes& grafoSedesRef,
+                 Blockchain& blockchainRef,
                  QWidget* parent = nullptr);
 
 signals:
@@ -43,6 +47,8 @@ private:
     ArbolBClientes& clientes;
     TablaHashReservas& reservas;
     GestorAsientosPorFuncion& gestor;
+    GrafoSedes& grafo;
+    Blockchain& blockchain;
 
     QStackedWidget* pila;
     QWidget* paginaLogin;

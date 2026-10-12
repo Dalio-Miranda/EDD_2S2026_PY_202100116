@@ -4,6 +4,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
+#include <QLabel>
 #include <QPushButton>
 #include <QDialog>
 #include <QFormLayout>
@@ -42,15 +43,6 @@ static int diasHastaFechaLocal(const std::string& fecha) {
     return static_cast<int>(std::difftime(tiempoObjetivo, tiempoHoy) / (60 * 60 * 24));
 }
 
-// Recorre el arbol inorden y junta las peliculas en un ArregloDinamico,
-// solo para poder llenar la tabla facilmente.
-static void recolectarInorden(NodoArbolPelicula* nodo, ArregloDinamico<Pelicula>& resultado) {
-    if (nodo == nullptr) return;
-    recolectarInorden(nodo->izquierdo, resultado);
-    resultado.agregarFinal(nodo->dato);
-    recolectarInorden(nodo->derecho, resultado);
-}
-
 PanelAdminPeliculas::PanelAdminPeliculas(ArbolBinarioPeliculas& carteleraRef, QWidget* parent)
     : QWidget(parent), cartelera(carteleraRef) {
 
@@ -68,6 +60,15 @@ PanelAdminPeliculas::PanelAdminPeliculas(ArbolBinarioPeliculas& carteleraRef, QW
     layoutBotones->addWidget(botonReporte);
     layoutBotones->addStretch();
 
+    QHBoxLayout* layoutRecorrido = new QHBoxLayout();
+    layoutRecorrido->addWidget(new QLabel("Ordenar listado por recorrido:"));
+    comboRecorrido = new QComboBox();
+    comboRecorrido->addItem("Inorden (por codigo, ascendente)");
+    comboRecorrido->addItem("Preorden");
+    comboRecorrido->addItem("Postorden");
+    layoutRecorrido->addWidget(comboRecorrido);
+    layoutRecorrido->addStretch();
+
     tabla = new QTableWidget(this);
     tabla->setColumnCount(9);
     tabla->setHorizontalHeaderLabels({"Codigo", "Titulo", "Genero", "Duracion",
@@ -76,16 +77,26 @@ PanelAdminPeliculas::PanelAdminPeliculas(ArbolBinarioPeliculas& carteleraRef, QW
     tabla->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tabla->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tabla->setSortingEnabled(true); // clic en un encabezado ordena por esa columna
+    // Nota: el ordenamiento visual de Qt (clic en encabezado) se
+    // desactiva cuando se elige preorden/postorden mas abajo, porque
+    // reordenar las filas alfabeticamente rompería el orden real del
+    // recorrido que se esta mostrando.
+    tabla->setSortingEnabled(true);
 
     layoutPrincipal->addLayout(layoutBotones);
+    layoutPrincipal->addLayout(layoutRecorrido);
     layoutPrincipal->addWidget(tabla);
 
     connect(botonAgregar, &QPushButton::clicked, this, &PanelAdminPeliculas::onAgregarPelicula);
     connect(botonEliminar, &QPushButton::clicked, this, &PanelAdminPeliculas::onEliminarPelicula);
     connect(botonCSV, &QPushButton::clicked, this, &PanelAdminPeliculas::onCargarCSV);
     connect(botonReporte, &QPushButton::clicked, this, &PanelAdminPeliculas::onGenerarReporte);
+    connect(comboRecorrido, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &PanelAdminPeliculas::onCambioRecorrido);
 
+    actualizarTabla();
+}
+
+void PanelAdminPeliculas::onCambioRecorrido() {
     actualizarTabla();
 }
 
@@ -103,8 +114,14 @@ QString PanelAdminPeliculas::calcularEstado(const Pelicula& p) const {
 }
 
 void PanelAdminPeliculas::actualizarTabla() {
-    ArregloDinamico<Pelicula> peliculas;
-    recolectarInorden(cartelera.getRaiz(), peliculas);
+    TipoRecorrido tipo = TipoRecorrido::INORDEN;
+    switch (comboRecorrido->currentIndex()) {
+        case 1: tipo = TipoRecorrido::PREORDEN; break;
+        case 2: tipo = TipoRecorrido::POSTORDEN; break;
+        default: tipo = TipoRecorrido::INORDEN; break;
+    }
+
+    ArregloDinamico<Pelicula> peliculas = cartelera.listarPeliculas(tipo);
 
     // Desactivamos el ordenamiento visual mientras llenamos la tabla,
     // para que no interfiera con el orden en que insertamos las filas
@@ -136,7 +153,11 @@ void PanelAdminPeliculas::actualizarTabla() {
         tabla->setItem(fila, 8, itemEstado);
     }
 
-    tabla->setSortingEnabled(true);
+    // El ordenamiento visual por columna (clic en encabezado) solo se
+    // reactiva en inorden: en preorden/postorden reordenar por columna
+    // rompería el orden del recorrido que se esta mostrando, que es
+    // justo lo que este selector pretende demostrar.
+    tabla->setSortingEnabled(tipo == TipoRecorrido::INORDEN);
 }
 
 void PanelAdminPeliculas::onAgregarPelicula() {

@@ -72,7 +72,11 @@ Blockchain::ResultadoCarga Blockchain::cargarDesdeDisco() {
     //   3. su ROOTMERKLE coincide con la raiz de Merkle recalculada
     //      a partir de su DATA actual (las transacciones no fueron
     //      alteradas).
+    cadenaEnDisco.vaciar();
+    cadenaEnDiscoIntegra.vaciar();
+
     int validos = 0;
+    bool cadenaRota = false;
     for (int i = 0; i < bloquesEnDisco.getTamanio(); i++) {
         const Bloque& actual = bloquesEnDisco[i];
 
@@ -85,12 +89,17 @@ Blockchain::ResultadoCarga Blockchain::cargarDesdeDisco() {
         std::string raizRecalculada = ArbolMerkle::calcularRaiz(actual.data);
         bool merkleOk = (raizRecalculada == actual.rootMerkle);
 
-        if (!prevOk || !hashOk || !merkleOk) {
+        // Estado para el reporte: integridad propia del bloque (hash y
+        // Merkle) y que su PREVIOUSHASH apunte al bloque anterior leido.
+        cadenaEnDisco.agregarFinal(actual);
+        cadenaEnDiscoIntegra.agregarFinal(prevOk && hashOk && merkleOk);
+
+        if (!cadenaRota && (!prevOk || !hashOk || !merkleOk)) {
             resultado.huboManipulacion = true;
             resultado.indiceDelPrimerManipulado = actual.index;
-            break;
+            cadenaRota = true;
         }
-        validos++;
+        if (!cadenaRota) validos++;
     }
 
     resultado.bloquesValidos = validos;
@@ -130,6 +139,7 @@ bool Blockchain::generarBloque() {
 
     insertarAlFrente(nuevo);
     persistirBloque(nuevo);
+    registrarEnCadenaDisco(nuevo, true);
 
     pendientes.vaciar();
     return true;
@@ -165,7 +175,14 @@ void Blockchain::reconstruirTablaHash(TablaHashReservas& tabla) const {
         Bloque* b = enOrden[i];
         for (int j = 0; j < b->data.getTamanio(); j++) {
             const Transaccion& t = b->data[j];
-            Reserva r(t.codigoReserva, t.codigoFuncion, t.idCliente, t.fila, t.columna, t.fechaPago);
+            // La transaccion guarda la fecha como DD-MM-AAAA (formato del
+            // enunciado); la Tabla Hash de reservas la maneja como
+            // AAAA-MM-DD (asi se compara contra "hoy" para VALIDA/VENCIDA).
+            std::string fechaReserva = t.fechaPago;
+            if (fechaReserva.size() == 10 && fechaReserva[2] == '-' && fechaReserva[5] == '-') {
+                fechaReserva = fechaReserva.substr(6, 4) + "-" + fechaReserva.substr(3, 2) + "-" + fechaReserva.substr(0, 2);
+            }
+            Reserva r(t.codigoReserva, t.codigoFuncion, t.idCliente, t.fila, t.columna, fechaReserva);
             tabla.insertar(r);
         }
     }
@@ -212,4 +229,97 @@ Blockchain::ResumenVentas Blockchain::calcularVentasTotales() const {
     }
 
     return resumen;
+}
+
+// ---------------------------------------------------------------------
+// Integridad, codigos y desglose de ventas
+// ---------------------------------------------------------------------
+
+bool Blockchain::bloqueEsIntegro(const Bloque& b) {
+    return b.esValido() && ArbolMerkle::calcularRaiz(b.data) == b.rootMerkle;
+}
+
+void Blockchain::registrarEnCadenaDisco(const Bloque& b, bool integro) {
+    // El bloque con ese INDEX reemplaza al que hubiera en disco con el
+    // mismo indice (caso: se genero un bloque nuevo tras descartar uno
+    // manipulado, que sobreescribe su archivo); si no existia, se agrega.
+    if (b.index >= 0 && b.index < cadenaEnDisco.getTamanio()) {
+        cadenaEnDisco[b.index] = b;
+        cadenaEnDiscoIntegra[b.index] = integro;
+    } else {
+        cadenaEnDisco.agregarFinal(b);
+        cadenaEnDiscoIntegra.agregarFinal(integro);
+    }
+}
+
+std::string Blockchain::generarCodigoTransaccion() const {
+    int n = 1;
+    while (true) {
+        char buf[16];
+        std::snprintf(buf, sizeof(buf), "T%03d", n);
+        std::string candidato(buf);
+
+        bool usado = buscarTransaccion(candidato).encontrado;
+        for (int i = 0; i < pendientes.getTamanio() && !usado; i++) {
+            if (pendientes[i].codigoTransaccion == candidato) usado = true;
+        }
+        if (!usado) return candidato;
+        n++;
+    }
+}
+
+ArregloDinamico<Transaccion> Blockchain::getPendientes() const {
+    return pendientes;
+}
+
+const ArregloDinamico<Bloque>& Blockchain::getCadenaEnDisco() const {
+    return cadenaEnDisco;
+}
+
+const ArregloDinamico<bool>& Blockchain::getCadenaEnDiscoIntegra() const {
+    return cadenaEnDiscoIntegra;
+}
+
+ArregloDinamico<Blockchain::LineaDesglose> Blockchain::desglosar(bool porFuncion) const {
+    ArregloDinamico<LineaDesglose> lineas;
+
+    for (NodoBloque* n = cabeza; n != nullptr; n = n->siguiente) {
+        for (int i = 0; i < n->dato.data.getTamanio(); i++) {
+            const Transaccion& t = n->dato.data[i];
+            const std::string& clave = porFuncion ? t.codigoFuncion : t.fechaPago;
+
+            int pos = -1;
+            for (int j = 0; j < lineas.getTamanio(); j++) {
+                if (lineas[j].clave == clave) { pos = j; break; }
+            }
+            if (pos == -1) {
+                LineaDesglose nueva;
+                nueva.clave = clave;
+                lineas.agregarFinal(nueva);
+                pos = lineas.getTamanio() - 1;
+            }
+            lineas[pos].boletos++;
+            lineas[pos].monto += t.monto;
+        }
+    }
+
+    // Orden alfabetico por clave (insercion), para una salida estable.
+    for (int i = 1; i < lineas.getTamanio(); i++) {
+        LineaDesglose actual = lineas[i];
+        int j = i - 1;
+        while (j >= 0 && lineas[j].clave > actual.clave) {
+            lineas[j + 1] = lineas[j];
+            j--;
+        }
+        lineas[j + 1] = actual;
+    }
+    return lineas;
+}
+
+ArregloDinamico<Blockchain::LineaDesglose> Blockchain::desglosePorFuncion() const {
+    return desglosar(true);
+}
+
+ArregloDinamico<Blockchain::LineaDesglose> Blockchain::desglosePorFecha() const {
+    return desglosar(false);
 }

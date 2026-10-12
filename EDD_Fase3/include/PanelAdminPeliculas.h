@@ -3,12 +3,14 @@
 
 #include <QWidget>
 #include <QTableWidget>
+#include <QComboBox>
 #include "ArbolBinarioPeliculas.h"
 
 // Pestana del administrador para gestionar la cartelera de peliculas:
 // agregar, eliminar, cargar CSV masivo, ver el estado de cada
-// pelicula (con alerta si esta proxima a retirarse) y generar
-// el reporte Graphviz del arbol.
+// pelicula (con alerta si esta proxima a retirarse), listar con los
+// 3 recorridos (preorden/inorden/postorden) y generar el reporte
+// Graphviz del arbol.
 class PanelAdminPeliculas : public QWidget {
     Q_OBJECT
 
@@ -20,10 +22,12 @@ private slots:
     void onEliminarPelicula();
     void onCargarCSV();
     void onGenerarReporte();
+    void onCambioRecorrido();
 
 private:
     ArbolBinarioPeliculas& cartelera;
     QTableWidget* tabla;
+    QComboBox* comboRecorrido;
 
     void actualizarTabla();
     QString calcularEstado(const Pelicula& p) const;

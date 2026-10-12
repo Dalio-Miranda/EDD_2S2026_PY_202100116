@@ -58,10 +58,45 @@ static std::string unirMensajes(const ArregloDinamico<std::string>& problemas) {
     return msg;
 }
 
+// ---------------------------------------------------------------------
+// Extraccion "segura" de campos JSON: si el archivo trae un campo con
+// un TIPO incorrecto (ej. duracion como texto "110 minutos" en vez de
+// numero), nlohmann::json lanza una excepcion al pedir j.value<int>().
+// Sin este helper, esa excepcion se propagaria sin capturar y
+// tumbaria toda la aplicacion en vez de solo rechazar ese registro
+// (justo el escenario que el enunciado pide poder manejar: "archivos
+// JSON modificados intencionalmente con... tipos de datos
+// incorrectos"). Estas funciones devuelven un valor "invalido" en vez
+// de lanzar, para que el resto de la validacion normal (campo vacio,
+// numero negativo, etc.) lo detecte y rechace el registro con un
+// mensaje claro.
+// ---------------------------------------------------------------------
+
+static std::string obtenerTexto(const json& j, const std::string& clave, std::string& errorOut) {
+    if (!j.contains(clave)) return "";
+    try {
+        return j.at(clave).get<std::string>();
+    } catch (const json::exception&) {
+        errorOut = clave + " tiene un tipo de dato invalido (se esperaba texto)";
+        return "";
+    }
+}
+
+static int obtenerEntero(const json& j, const std::string& clave, std::string& errorOut) {
+    if (!j.contains(clave)) return -1;
+    try {
+        return j.at(clave).get<int>();
+    } catch (const json::exception&) {
+        errorOut = clave + " tiene un tipo de dato invalido (se esperaba un numero entero)";
+        return -1;
+    }
+}
+
 ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
     const std::string& rutaArchivo,
     ArbolBinarioPeliculas& arbolPeliculas,
-    ArbolAVLFunciones& arbolFunciones) {
+    ArbolAVLFunciones& arbolFunciones,
+    GrafoSedes& grafo) {
 
     ResultadoCarga resultado;
 
@@ -81,27 +116,96 @@ ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
         return resultado;
     }
 
-    for (const auto& jPelicula : j.value("peliculas", json::array())) {
-        std::string codigo = jPelicula.value("codigo", "");
-        std::string titulo = jPelicula.value("titulo", "");
+    // ---- Paso 1 (Fase 3): cargar "sedes" PRIMERO, como vertices del
+    // grafo (sin aristas todavia) -- las funciones que vienen despues
+    // necesitan que su "sede" ya exista para poder validarse.
+    nlohmann::json listaSedes;
+    try {
+        listaSedes = j.value("sedes", json::array());
+    } catch (const json::exception&) {
+        listaSedes = json::array();
+    }
 
+    for (const auto& jSede : listaSedes) {
+        ArregloDinamico<std::string> problemasSede;
+        std::string errorTipoSede;
+
+        std::string codigoSede = obtenerTexto(jSede, "codigo", errorTipoSede);
+        if (!errorTipoSede.empty()) { problemasSede.agregarFinal(errorTipoSede); errorTipoSede.clear(); }
+
+        std::string nombreSede = obtenerTexto(jSede, "nombre", errorTipoSede);
+        if (!errorTipoSede.empty()) { problemasSede.agregarFinal(errorTipoSede); errorTipoSede.clear(); }
+
+        std::string direccionSede = obtenerTexto(jSede, "direccion", errorTipoSede);
+        if (!errorTipoSede.empty()) { problemasSede.agregarFinal(errorTipoSede); errorTipoSede.clear(); }
+
+        int cantidadSalas = obtenerEntero(jSede, "cantidad_salas", errorTipoSede);
+        if (!errorTipoSede.empty()) { problemasSede.agregarFinal(errorTipoSede); errorTipoSede.clear(); }
+
+        std::string telefonoSede = obtenerTexto(jSede, "telefono", errorTipoSede);
+        if (!errorTipoSede.empty()) { problemasSede.agregarFinal(errorTipoSede); errorTipoSede.clear(); }
+
+        if (!campoTextoValido(codigoSede)) problemasSede.agregarFinal("codigo vacio o ausente");
+        if (!codigoSede.empty() && grafo.existeSede(codigoSede)) problemasSede.agregarFinal("el codigo de sede ya existe");
+        if (!campoTextoValido(nombreSede)) problemasSede.agregarFinal("nombre vacio o ausente");
+        if (!campoTextoValido(direccionSede)) problemasSede.agregarFinal("direccion vacia o ausente");
+        if (cantidadSalas <= 0) problemasSede.agregarFinal("cantidad_salas invalida (debe ser un entero positivo)");
+        if (!campoTextoValido(telefonoSede)) problemasSede.agregarFinal("telefono vacio o ausente");
+
+        if (!problemasSede.estaVacio()) {
+            resultado.rechazados++;
+            std::string idRef = codigoSede.empty() ? "(sin codigo)" : codigoSede;
+            resultado.errores.agregarFinal("Sede " + idRef + " rechazada: " + unirMensajes(problemasSede));
+            continue;
+        }
+
+        grafo.agregarSede(Sede(codigoSede, nombreSede, direccionSede, cantidadSalas, telefonoSede));
+        resultado.exitosos++;
+    }
+
+    nlohmann::json listaPeliculas;
+    try {
+        listaPeliculas = j.value("peliculas", json::array());
+    } catch (const json::exception&) {
+        // "peliculas" existe pero no es un arreglo: no hay nada que cargar.
+        listaPeliculas = json::array();
+    }
+
+    for (const auto& jPelicula : listaPeliculas) {
         ArregloDinamico<std::string> problemas;
+
+        std::string errorTipo;
+        std::string codigo = obtenerTexto(jPelicula, "codigo", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string titulo = obtenerTexto(jPelicula, "titulo", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string genero = obtenerTexto(jPelicula, "genero", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string clasificacion = obtenerTexto(jPelicula, "clasificacion", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string idioma = obtenerTexto(jPelicula, "idioma", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        int duracion = obtenerEntero(jPelicula, "duracion", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string fechaEstreno = obtenerTexto(jPelicula, "fecha_estreno", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string fechaFin = obtenerTexto(jPelicula, "fecha_fin", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
         if (!campoTextoValido(codigo)) problemas.agregarFinal("codigo vacio o ausente");
         if (!codigo.empty() && arbolPeliculas.buscar(codigo) != nullptr) problemas.agregarFinal("el codigo ya existe");
         if (!campoTextoValido(titulo)) problemas.agregarFinal("titulo vacio o ausente");
-
-        std::string genero = jPelicula.value("genero", "");
-        std::string clasificacion = jPelicula.value("clasificacion", "");
-        std::string idioma = jPelicula.value("idioma", "");
         if (!campoTextoValido(genero)) problemas.agregarFinal("genero vacio o ausente");
         if (!campoTextoValido(clasificacion)) problemas.agregarFinal("clasificacion vacia o ausente");
         if (!campoTextoValido(idioma)) problemas.agregarFinal("idioma vacio o ausente");
-
-        int duracion = jPelicula.value("duracion", -1);
         if (duracion <= 0) problemas.agregarFinal("duracion invalida (debe ser un entero positivo)");
-
-        std::string fechaEstreno = jPelicula.value("fecha_estreno", "");
-        std::string fechaFin = jPelicula.value("fecha_fin", "");
         if (!esFechaValida(fechaEstreno)) problemas.agregarFinal("fecha_estreno invalida (formato esperado YYYY-MM-DD)");
         if (!esFechaValida(fechaFin)) problemas.agregarFinal("fecha_fin invalida (formato esperado YYYY-MM-DD)");
 
@@ -110,7 +214,12 @@ ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
             std::string idRef = codigo.empty() ? "(sin codigo)" : codigo;
             resultado.errores.agregarFinal("Pelicula " + idRef + " rechazada: " + unirMensajes(problemas));
 
-            int cantidadFuncionesHuerfanas = static_cast<int>(jPelicula.value("funciones", json::array()).size());
+            int cantidadFuncionesHuerfanas = 0;
+            try {
+                cantidadFuncionesHuerfanas = static_cast<int>(jPelicula.value("funciones", json::array()).size());
+            } catch (const json::exception&) {
+                cantidadFuncionesHuerfanas = 0;
+            }
             if (cantidadFuncionesHuerfanas > 0) {
                 resultado.rechazados += cantidadFuncionesHuerfanas;
                 resultado.errores.agregarFinal(
@@ -132,20 +241,54 @@ ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
         arbolPeliculas.insertar(p);
         resultado.exitosos++;
 
-        for (const auto& jFuncion : jPelicula.value("funciones", json::array())) {
-            std::string codigoFuncion = jFuncion.value("codigo_funcion", "");
-            std::string horario = jFuncion.value("horario", "");
-            std::string sala = jFuncion.value("sala", "");
-            int filas = jFuncion.value("filas", -1);
-            int columnas = jFuncion.value("columnas", -1);
-            std::string archivoAsientos = jFuncion.value("archivo_asientos", "");
+        nlohmann::json listaFunciones;
+        try {
+            listaFunciones = jPelicula.value("funciones", json::array());
+        } catch (const json::exception&) {
+            listaFunciones = json::array();
+        }
 
+        for (const auto& jFuncion : listaFunciones) {
             ArregloDinamico<std::string> problemasFuncion;
+
+            std::string codigoFuncion = obtenerTexto(jFuncion, "codigo_funcion", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string horario = obtenerTexto(jFuncion, "horario", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string sala = obtenerTexto(jFuncion, "sala", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            int filas = obtenerEntero(jFuncion, "filas", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            int columnas = obtenerEntero(jFuncion, "columnas", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string archivoAsientos = obtenerTexto(jFuncion, "archivo_asientos", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            // --- Nuevo en Fase 3: la sede donde se proyecta, y la fecha ---
+            std::string codigoSedeFuncion = obtenerTexto(jFuncion, "sede", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string fechaFuncion = obtenerTexto(jFuncion, "fecha", errorTipo);
+            if (!errorTipo.empty()) { problemasFuncion.agregarFinal(errorTipo); errorTipo.clear(); }
+
             if (!campoTextoValido(codigoFuncion)) problemasFuncion.agregarFinal("codigo_funcion vacio o ausente");
             if (!campoTextoValido(horario)) problemasFuncion.agregarFinal("horario vacio o ausente");
             if (!campoTextoValido(sala)) problemasFuncion.agregarFinal("sala vacia o ausente");
             if (filas <= 0) problemasFuncion.agregarFinal("filas invalidas (debe ser un entero positivo)");
             if (columnas <= 0) problemasFuncion.agregarFinal("columnas invalidas (debe ser un entero positivo)");
+            // No se puede crear una relacion con un vertice (sede)
+            // inexistente (enunciado 4.1, "Carga masiva").
+            if (!campoTextoValido(codigoSedeFuncion)) {
+                problemasFuncion.agregarFinal("sede vacia o ausente");
+            } else if (!grafo.existeSede(codigoSedeFuncion)) {
+                problemasFuncion.agregarFinal("la sede '" + codigoSedeFuncion + "' no existe");
+            }
+            if (!esFechaValida(fechaFuncion)) problemasFuncion.agregarFinal("fecha invalida (formato esperado YYYY-MM-DD)");
 
             if (!problemasFuncion.estaVacio()) {
                 resultado.rechazados++;
@@ -155,7 +298,8 @@ ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
                 continue;
             }
 
-            Funcion f(codigoFuncion, codigo, horario, sala, filas, columnas, archivoAsientos);
+            Funcion f(codigoFuncion, codigo, horario, sala, filas, columnas, archivoAsientos,
+                      codigoSedeFuncion, fechaFuncion);
             bool ok = arbolFunciones.insertar(f);
             if (ok) {
                 resultado.exitosos++;
@@ -164,6 +308,14 @@ ResultadoCarga PersistenciaJSON::cargarPeliculasYFunciones(
                 resultado.errores.agregarFinal("Funcion " + codigoFuncion + " rechazada: el codigo_funcion ya existe");
             }
         }
+    }
+
+    // ---- Paso final (Fase 3): ahora que todas las sedes y funciones
+    // estan cargadas, se calculan las aristas del grafo (peso =
+    // cantidad de peliculas en comun entre cada par de sedes).
+    ArregloDinamico<Sede> todasLasSedes = grafo.listarSedes();
+    for (int i = 0; i < todasLasSedes.getTamanio(); i++) {
+        grafo.recalcularRelacionesDeSede(todasLasSedes[i].codigo, arbolFunciones);
     }
 
     return resultado;
@@ -192,15 +344,39 @@ ResultadoCarga PersistenciaJSON::cargarClientesYReservas(
         return resultado;
     }
 
-    for (const auto& jCliente : j.value("clientes", json::array())) {
-        std::string id = jCliente.value("id", "");
-        std::string nombre = jCliente.value("nombre", "");
-        std::string correo = jCliente.value("correo", "");
-        std::string telefono = jCliente.value("telefono", "");
-        std::string password = jCliente.value("password", "");
-        std::string tipo = jCliente.value("tipo", "cliente");
+    nlohmann::json listaClientes;
+    try {
+        listaClientes = j.value("clientes", json::array());
+    } catch (const json::exception&) {
+        listaClientes = json::array();
+    }
 
+    for (const auto& jCliente : listaClientes) {
         ArregloDinamico<std::string> problemas;
+        std::string errorTipo;
+
+        std::string id = obtenerTexto(jCliente, "id", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string nombre = obtenerTexto(jCliente, "nombre", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string correo = obtenerTexto(jCliente, "correo", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string telefono = obtenerTexto(jCliente, "telefono", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string password = obtenerTexto(jCliente, "password", errorTipo);
+        if (!errorTipo.empty()) { problemas.agregarFinal(errorTipo); errorTipo.clear(); }
+
+        std::string tipo = "cliente";
+        try {
+            tipo = jCliente.value("tipo", std::string("cliente"));
+        } catch (const json::exception&) {
+            tipo = "cliente";
+        }
+
         if (!campoTextoValido(id)) problemas.agregarFinal("id vacio o ausente");
         if (!campoTextoValido(nombre)) problemas.agregarFinal("nombre vacio o ausente");
         if (correo.find('@') == std::string::npos || correo.empty()) {
@@ -214,7 +390,12 @@ ResultadoCarga PersistenciaJSON::cargarClientesYReservas(
             std::string idRef = id.empty() ? "(sin id)" : id;
             resultado.errores.agregarFinal("Cliente " + idRef + " rechazado: " + unirMensajes(problemas));
 
-            int cantidadReservasHuerfanas = static_cast<int>(jCliente.value("reservas", json::array()).size());
+            int cantidadReservasHuerfanas = 0;
+            try {
+                cantidadReservasHuerfanas = static_cast<int>(jCliente.value("reservas", json::array()).size());
+            } catch (const json::exception&) {
+                cantidadReservasHuerfanas = 0;
+            }
             if (cantidadReservasHuerfanas > 0) {
                 resultado.rechazados += cantidadReservasHuerfanas;
                 resultado.errores.agregarFinal(
@@ -234,14 +415,32 @@ ResultadoCarga PersistenciaJSON::cargarClientesYReservas(
         resultado.exitosos++;
 
         ArregloDinamico<std::string> codigosValidos;
-        for (const auto& jReserva : jCliente.value("reservas", json::array())) {
-            std::string codigoReserva = jReserva.value("codigo_reserva", "");
-            std::string codigoFuncion = jReserva.value("codigo_funcion", "");
-            int fila = jReserva.value("fila", -1);
-            int columna = jReserva.value("columna", -1);
-            std::string fechaReserva = jReserva.value("fecha_reserva", "");
 
+        nlohmann::json listaReservas;
+        try {
+            listaReservas = jCliente.value("reservas", json::array());
+        } catch (const json::exception&) {
+            listaReservas = json::array();
+        }
+
+        for (const auto& jReserva : listaReservas) {
             ArregloDinamico<std::string> problemasReserva;
+
+            std::string codigoReserva = obtenerTexto(jReserva, "codigo_reserva", errorTipo);
+            if (!errorTipo.empty()) { problemasReserva.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string codigoFuncion = obtenerTexto(jReserva, "codigo_funcion", errorTipo);
+            if (!errorTipo.empty()) { problemasReserva.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            int fila = obtenerEntero(jReserva, "fila", errorTipo);
+            if (!errorTipo.empty()) { problemasReserva.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            int columna = obtenerEntero(jReserva, "columna", errorTipo);
+            if (!errorTipo.empty()) { problemasReserva.agregarFinal(errorTipo); errorTipo.clear(); }
+
+            std::string fechaReserva = obtenerTexto(jReserva, "fecha_reserva", errorTipo);
+            if (!errorTipo.empty()) { problemasReserva.agregarFinal(errorTipo); errorTipo.clear(); }
+
             if (!campoTextoValido(codigoReserva)) problemasReserva.agregarFinal("codigo_reserva vacio o ausente");
             if (!campoTextoValido(codigoFuncion)) problemasReserva.agregarFinal("codigo_funcion vacio o ausente");
             if (fila <= 0) problemasReserva.agregarFinal("fila invalida (debe ser un entero positivo)");

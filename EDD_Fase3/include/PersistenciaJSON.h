@@ -7,6 +7,7 @@
 #include "ArbolAVLFunciones.h"
 #include "ArbolBClientes.h"
 #include "TablaHashReservas.h"
+#include "GrafoSedes.h"
 
 // Resultado de una operacion de carga masiva. "errores" es un
 // ArregloDinamico (arreglo dinamico propio, no std::vector) con el
@@ -22,10 +23,16 @@ struct ResultadoCarga {
 
 class PersistenciaJSON {
 public:
+    // A partir de Fase 3, el archivo tambien trae un arreglo
+    // "sedes" (que se cargan como vertices del grafo ANTES que las
+    // peliculas/funciones), y cada funcion debe referenciar una
+    // sede existente mediante su campo "sede" -- si no, la funcion
+    // completa se rechaza (enunciado 4.1, "Carga masiva").
     static ResultadoCarga cargarPeliculasYFunciones(
         const std::string& rutaArchivo,
         ArbolBinarioPeliculas& arbolPeliculas,
-        ArbolAVLFunciones& arbolFunciones);
+        ArbolAVLFunciones& arbolFunciones,
+        GrafoSedes& grafo);
 
     static ResultadoCarga cargarClientesYReservas(
         const std::string& rutaArchivo,

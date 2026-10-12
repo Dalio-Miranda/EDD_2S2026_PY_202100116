@@ -7,6 +7,7 @@
 #include "PanelClienteReservar2.h"
 #include "PanelClienteHistorial2.h"
 #include "PanelClienteCancelarReserva2.h"
+#include "PanelClienteMiPerfil.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -27,10 +28,13 @@ PanelCliente::PanelCliente(ArbolBinarioPeliculas& carteleraRef,
                             ArbolBClientes& arbolClientes,
                             TablaHashReservas& tablaReservas,
                             GestorAsientosPorFuncion& gestorAsientos,
+                            GrafoSedes& grafoSedesRef,
+                            Blockchain& blockchainRef,
                             QWidget* parent)
     : QWidget(parent), cartelera(carteleraRef), promociones(promocionesRef), solicitudes(solicitudesRef),
       matrizAsientos(matrizAsientosRef), funciones(arbolFunciones), clientes(arbolClientes),
-      reservas(tablaReservas), gestor(gestorAsientos) {
+      reservas(tablaReservas), gestor(gestorAsientos),
+      grafo(grafoSedesRef), blockchain(blockchainRef) {
 
     QVBoxLayout* layoutPrincipal = new QVBoxLayout(this);
 
@@ -219,8 +223,9 @@ void PanelCliente::construirPaginaSesion() {
 
     QTabWidget* pestanas = new QTabWidget();
     pestanas->addTab(new PanelClienteCartelera(cartelera), "Cartelera");
-    pestanas->addTab(new PanelClienteReservar2(cartelera, funciones, gestor, reservas, clientes, idClienteActual), "Reservar");
-    pestanas->addTab(new PanelClienteHistorial2(clientes, reservas, idClienteActual), "Mis Reservas");
+    pestanas->addTab(new PanelClienteMiPerfil(clientes, idClienteActual), "Mi Perfil");
+    pestanas->addTab(new PanelClienteReservar2(cartelera, funciones, gestor, reservas, clientes, grafo, blockchain, idClienteActual), "Reservar");
+    pestanas->addTab(new PanelClienteHistorial2(blockchain, funciones, idClienteActual), "Mis Compras");
     pestanas->addTab(new PanelClienteCancelarReserva2(clientes, reservas, funciones, gestor, idClienteActual), "Cancelar Reserva");
     pestanas->addTab(new PanelClientePromociones(promociones), "Promociones");
     pestanas->addTab(new PanelClienteSolicitudes(solicitudes), "Solicitudes");

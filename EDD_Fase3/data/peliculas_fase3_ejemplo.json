@@ -1,0 +1,173 @@
+{
+  "sedes": [
+    {
+      "codigo": "S001",
+      "nombre": "CinemaUSAC Zona 10",
+      "direccion": "Zona 10, Ciudad de Guatemala",
+      "cantidad_salas": 3,
+      "telefono": "1122-3344"
+    },
+    {
+      "codigo": "S002",
+      "nombre": "CinemaUSAC Zona 4",
+      "direccion": "Zona 4, Ciudad de Guatemala",
+      "cantidad_salas": 5,
+      "telefono": "1122-3344"
+    },
+    {
+      "codigo": "S003",
+      "nombre": "CinemaUSAC Zona 1",
+      "direccion": "Zona 1, Ciudad de Guatemala",
+      "cantidad_salas": 4,
+      "telefono": "2233-4455"
+    },
+    {
+      "codigo": "S004",
+      "nombre": "CinemaUSAC Zona 12",
+      "direccion": "Zona 12, Ciudad de Guatemala",
+      "cantidad_salas": 6,
+      "telefono": "3344-5566"
+    }
+  ],
+  "peliculas": [
+    {
+      "codigo": "P001",
+      "titulo": "Batman",
+      "genero": "Accion",
+      "duracion": 150,
+      "clasificacion": "B15",
+      "idioma": "Subtitulada",
+      "fecha_estreno": "2026-10-01",
+      "fecha_fin": "2026-12-31",
+      "funciones": [
+        {
+          "codigo_funcion": "F001",
+          "fecha": "2026-10-25",
+          "horario": "17:00",
+          "sede": "S001",
+          "sala": "Sala 2",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        },
+        {
+          "codigo_funcion": "F002",
+          "fecha": "2026-10-25",
+          "horario": "20:00",
+          "sede": "S002",
+          "sala": "Sala 1",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        },
+        {
+          "codigo_funcion": "F003",
+          "fecha": "2026-10-26",
+          "horario": "19:00",
+          "sede": "S003",
+          "sala": "Sala 3",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        }
+      ]
+    },
+    {
+      "codigo": "P002",
+      "titulo": "Titanic",
+      "genero": "Drama",
+      "duracion": 195,
+      "clasificacion": "A",
+      "idioma": "Doblada",
+      "fecha_estreno": "2026-10-01",
+      "fecha_fin": "2026-12-31",
+      "funciones": [
+        {
+          "codigo_funcion": "F004",
+          "fecha": "2026-10-25",
+          "horario": "18:00",
+          "sede": "S001",
+          "sala": "Sala 1",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        },
+        {
+          "codigo_funcion": "F005",
+          "fecha": "2026-10-26",
+          "horario": "19:00",
+          "sede": "S002",
+          "sala": "Sala 2",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        }
+      ]
+    },
+    {
+      "codigo": "P003",
+      "titulo": "Intensamente 2",
+      "genero": "Animacion",
+      "duracion": 100,
+      "clasificacion": "AA",
+      "idioma": "Espanol",
+      "fecha_estreno": "2026-10-05",
+      "fecha_fin": "2026-12-15",
+      "funciones": [
+        {
+          "codigo_funcion": "F006",
+          "fecha": "2026-10-27",
+          "horario": "16:00",
+          "sede": "S003",
+          "sala": "Sala 1",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        },
+        {
+          "codigo_funcion": "F007",
+          "fecha": "2026-10-27",
+          "horario": "16:00",
+          "sede": "S004",
+          "sala": "Sala 2",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        }
+      ]
+    },
+    {
+      "codigo": "P004",
+      "titulo": "Pelicula sin funciones",
+      "genero": "Comedia",
+      "duracion": 95,
+      "clasificacion": "A",
+      "idioma": "Espanol",
+      "fecha_estreno": "2026-11-01",
+      "fecha_fin": "2026-12-31",
+      "funciones": []
+    },
+    {
+      "codigo": "P005",
+      "titulo": "Funcion con sede inexistente (debe rechazarse)",
+      "genero": "Terror",
+      "duracion": 110,
+      "clasificacion": "C",
+      "idioma": "Subtitulada",
+      "fecha_estreno": "2026-10-01",
+      "fecha_fin": "2026-12-31",
+      "funciones": [
+        {
+          "codigo_funcion": "F008",
+          "fecha": "2026-10-28",
+          "horario": "21:00",
+          "sede": "S999",
+          "sala": "Sala 1",
+          "filas": 8,
+          "columnas": 10,
+          "archivo_asientos": ""
+        }
+      ]
+    }
+  ]
+}

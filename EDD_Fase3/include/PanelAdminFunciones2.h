@@ -5,12 +5,14 @@
 #include <QTableWidget>
 #include <QComboBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QGridLayout>
 #include "ArbolAVLFunciones.h"
 #include "ArbolBinarioPeliculas.h"
 #include "GestorAsientosPorFuncion.h"
 #include "TablaHashReservas.h"
 #include "ArbolBClientes.h"
+#include "GrafoSedes.h"
 
 class PanelAdminFunciones2 : public QWidget {
     Q_OBJECT
@@ -21,6 +23,7 @@ public:
                           GestorAsientosPorFuncion& gestorRef,
                           TablaHashReservas& reservasRef,
                           ArbolBClientes& clientesRef,
+                          GrafoSedes& grafoRef,
                           QWidget* parent = nullptr);
 
 protected:
@@ -34,6 +37,7 @@ private slots:
     void onCargarJSON();
     void onCambioRecorrido();
     void onClickAsiento(int fila, int columna);
+    void onBuscarFuncion();
 
 private:
     ArbolAVLFunciones& funciones;
@@ -41,9 +45,11 @@ private:
     GestorAsientosPorFuncion& gestor;
     TablaHashReservas& reservas;
     ArbolBClientes& clientes;
+    GrafoSedes& grafo;
 
     QTableWidget* tablaFunciones;
     QComboBox* comboRecorrido;
+    QLineEdit* campoBusqueda;
     QLabel* labelInfoActiva;
     QWidget* contenedorGrilla;
     QGridLayout* layoutGrilla;
@@ -53,6 +59,7 @@ private:
     void limpiarGrilla();
     std::string generarCodigoFuncionUnico() const;
     std::string codigoSeleccionado() const;
+    void seleccionarFilaPorCodigo(const std::string& codigo);
 };
 
 #endif // PANEL_ADMIN_FUNCIONES2_H

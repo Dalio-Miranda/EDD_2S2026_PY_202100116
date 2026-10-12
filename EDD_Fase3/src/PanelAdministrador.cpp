@@ -5,6 +5,8 @@
 #include "PanelAdminFunciones.h"
 #include "PanelAdminFunciones2.h"
 #include "PanelAdminClientes.h"
+#include "PanelAdminSedes.h"
+#include "PanelAdminBlockchain.h"
 #include "PanelReportes.h"
 
 #include <QVBoxLayout>
@@ -22,6 +24,8 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
                                         ArbolBClientes& arbolClientes,
                                         TablaHashReservas& tablaReservas,
                                         GestorAsientosPorFuncion& gestorAsientos,
+                                        GrafoSedes& grafoSedes,
+                                        Blockchain& blockchain,
                                         QWidget* parent)
     : QWidget(parent) {
 
@@ -48,10 +52,13 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
     pestanas->addTab(new PanelAdminPromociones(promociones), "Promociones");
     pestanas->addTab(new PanelAdminSolicitudes(solicitudes), "Solicitudes");
     pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos (Fase 1)");
-    pestanas->addTab(new PanelAdminFunciones2(arbolFunciones, cartelera, gestorAsientos, tablaReservas, arbolClientes), "Funciones (Fase 2)");
+    pestanas->addTab(new PanelAdminFunciones2(arbolFunciones, cartelera, gestorAsientos, tablaReservas, arbolClientes, grafoSedes), "Funciones (Fase 2)");
     pestanas->addTab(new PanelAdminClientes(arbolClientes, tablaReservas), "Clientes");
+    pestanas->addTab(new PanelAdminSedes(grafoSedes, arbolFunciones, cartelera), "Sedes (Fase 3)");
+    pestanas->addTab(new PanelAdminBlockchain(blockchain), "Blockchain (Fase 3)");
     pestanas->addTab(new PanelReportes(cartelera, solicitudes, promociones, matrizAsientos,
-                                        arbolFunciones, arbolClientes, tablaReservas, gestorAsientos), "Reportes");
+                                        arbolFunciones, arbolClientes, tablaReservas, gestorAsientos,
+                                        grafoSedes, blockchain), "Reportes");
 
     layoutPrincipal->addLayout(layoutSuperior);
     layoutPrincipal->addWidget(pestanas);

@@ -10,6 +10,9 @@
 #include "ArbolBClientes.h"
 #include "TablaHashReservas.h"
 #include "GestorAsientosPorFuncion.h"
+#include "Blockchain.h"
+#include "Bloque.h"
+#include "GrafoSedes.h"
 
 // Genera los reportes graficos que pide el enunciado, usando
 // Graphviz. Cada funcion escribe un archivo .dot en carpetaReportes
@@ -65,6 +68,36 @@ namespace ReportesGraphviz {
                                                  TablaHashReservas& reservas,
                                                  ArbolBClientes& clientes,
                                                  const std::string& carpetaReportes);
+
+    // --------------------- Reportes nuevos de Fase 3 ---------------------
+
+    // Cadena de bloques como lista enlazada (el bloque mas reciente a
+    // la izquierda, con flecha hacia su bloque anterior). Cada bloque
+    // muestra INDEX, NONCE, HASH y PREVIOUSHASH (abreviados) y se
+    // colorea de VERDE si su integridad es valida o de ROJO si fue
+    // manipulado (enunciado, "Proteccion de datos"). Escribe
+    // reporte_blockchain.png.
+    void generarReporteBlockchain(const Blockchain& blockchain,
+                                   const std::string& carpetaReportes);
+
+    // Arbol de Merkle completo de UN bloque: cada hoja es una
+    // transaccion de su DATA y cada nodo interno el hash combinado de
+    // sus hijos, hasta el ROOTMERKLE. Escribe reporte_merkle.png.
+    void generarReporteMerkle(const Bloque& bloque,
+                               const std::string& carpetaReportes);
+
+    // Grafo no dirigido ponderado de sedes: un vertice por sede (con
+    // codigo, nombre, direccion, salas y telefono) y una arista por
+    // cada par relacionado, rotulada con su peso. Escribe
+    // reporte_grafo_sedes.png (Graphviz "graph" + layout neato).
+    void generarReporteGrafoSedes(const GrafoSedes& grafo,
+                                   const std::string& carpetaReportes);
+
+    // Lista de adyacencia del grafo: una fila por vertice, seguida de
+    // la cadena de aristas (vecino + peso) de ese vertice como lista
+    // enlazada. Escribe reporte_lista_adyacencia.png.
+    void generarReporteListaAdyacencia(const GrafoSedes& grafo,
+                                        const std::string& carpetaReportes);
 }
 
 #endif // REPORTES_GRAPHVIZ_H

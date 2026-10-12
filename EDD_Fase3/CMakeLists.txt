@@ -52,6 +52,8 @@ set(SOURCES
     src/Bloque.cpp
     src/ArbolMerkle.cpp
     src/Blockchain.cpp
+    src/LZW.cpp
+    src/PersistenciaEDD.cpp
 
     # --- Paneles de UI nuevos de Fase 2 ---
     src/PanelAdminFunciones2.cpp
@@ -59,6 +61,9 @@ set(SOURCES
     src/PanelClienteReservar2.cpp
     src/PanelClienteHistorial2.cpp
     src/PanelClienteCancelarReserva2.cpp
+    src/PanelClienteMiPerfil.cpp
+    src/PanelAdminSedes.cpp
+    src/PanelAdminBlockchain.cpp
 )
 
 set(HEADERS
@@ -104,6 +109,8 @@ set(HEADERS
     include/Bloque.h
     include/ArbolMerkle.h
     include/Blockchain.h
+    include/LZW.h
+    include/PersistenciaEDD.h
     include/ArregloDinamico.h
     include/TipoRecorrido.h
 
@@ -113,6 +120,9 @@ set(HEADERS
     include/PanelClienteReservar2.h
     include/PanelClienteHistorial2.h
     include/PanelClienteCancelarReserva2.h
+    include/PanelClienteMiPerfil.h
+    include/PanelAdminSedes.h
+    include/PanelAdminBlockchain.h
 )
 
 add_executable(CinemaUSAC_Fase3 ${SOURCES} ${HEADERS})
