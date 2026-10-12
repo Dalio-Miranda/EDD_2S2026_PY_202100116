@@ -11,3 +11,4 @@ reports/*.png
 reports/*.pdf
 reports/*.dot
 blocks/*.json
+*.edd
