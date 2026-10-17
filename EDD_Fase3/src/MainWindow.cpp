@@ -204,9 +204,19 @@ QWidget* MainWindow::crearPlaceholder(const QString& texto) {
     return pantalla;
 }
 
-// Al cerrar el programa se guarda el estado ACTUAL en memoria (no el
+// Al cerrar el programa se guardan las compras pendientes en un bloque y
+// se guarda el estado ACTUAL en memoria (no el
 // archivo de carga masiva) en los tres archivos comprimidos .edd.
 void MainWindow::closeEvent(QCloseEvent* event) {
+    // Si quedaron compras pendientes (menos de 4 y el administrador no
+    // genero el bloque), se mina un bloque ahora para no perderlas: la
+    // Tabla Hash se reconstruye solo desde la blockchain, asi que una
+    // compra que no llegue a un bloque desapareceria al reiniciar
+    // (indicacion del auxiliar en el foro).
+    if (blockchain.getCantidadPendientes() > 0) {
+        blockchain.generarBloque();
+    }
+
     if (!PersistenciaEDD::guardarTodo("..", grafoSedes, cartelera, arbolFunciones)) {
         QMessageBox::warning(this, "Persistencia",
             "No se pudieron escribir los archivos .edd (sedes, peliculas, funciones).");

@@ -50,6 +50,44 @@ Sede* GrafoSedes::buscarSede(const std::string& codigo) {
     return nodo == nullptr ? nullptr : &nodo->dato;
 }
 
+bool GrafoSedes::editarSede(const std::string& codigo,
+                            const std::string& nombre,
+                            const std::string& direccion,
+                            int cantidadSalas,
+                            const std::string& telefono) {
+    NodoGrafoSede* nodo = buscarNodo(codigo);
+    if (nodo == nullptr) return false;
+
+    nodo->dato.nombre = nombre;
+    nodo->dato.direccion = direccion;
+    nodo->dato.cantidadSalas = cantidadSalas;
+    nodo->dato.telefono = telefono;
+    return true;
+}
+
+bool GrafoSedes::eliminarSede(const std::string& codigo) {
+    NodoGrafoSede* nodo = buscarNodo(codigo);
+    if (nodo == nullptr) return false;
+
+    // Grafo no dirigido: cada vecino guarda una arista de regreso hacia
+    // esta sede. Hay que quitarla de su lista de adyacencia para no
+    // dejar referencias a un vertice que ya no existe.
+    for (int i = 0; i < nodo->aristas.getTamanio(); i++) {
+        NodoGrafoSede* vecino = buscarNodo(nodo->aristas[i].sedeVecina);
+        if (vecino != nullptr) establecerAristaUnidireccional(vecino, codigo, 0);
+    }
+
+    // Se saca el puntero del arreglo de vertices y se libera el nodo.
+    for (int i = 0; i < vertices.getTamanio(); i++) {
+        if (vertices[i] == nodo) {
+            vertices.eliminarEn(i);
+            break;
+        }
+    }
+    delete nodo;
+    return true;
+}
+
 bool GrafoSedes::existeSede(const std::string& codigo) const {
     return buscarNodo(codigo) != nullptr;
 }

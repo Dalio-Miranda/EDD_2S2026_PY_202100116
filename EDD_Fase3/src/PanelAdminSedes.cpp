@@ -29,8 +29,9 @@ QTableWidget* crearTabla(const QStringList& encabezados) {
 PanelAdminSedes::PanelAdminSedes(GrafoSedes& grafoRef,
                                  ArbolAVLFunciones& funcionesRef,
                                  ArbolBinarioPeliculas& carteleraRef,
+                                 GestorAsientosPorFuncion& gestorRef,
                                  QWidget* parent)
-    : QWidget(parent), grafo(grafoRef), funciones(funcionesRef), cartelera(carteleraRef) {
+    : QWidget(parent), grafo(grafoRef), funciones(funcionesRef), cartelera(carteleraRef), gestor(gestorRef) {
 
     QVBoxLayout* layoutPrincipal = new QVBoxLayout(this);
     QTabWidget* pestanas = new QTabWidget();
@@ -40,8 +41,14 @@ PanelAdminSedes::PanelAdminSedes(GrafoSedes& grafoRef,
     QVBoxLayout* layoutSedes = new QVBoxLayout(paginaSedes);
 
     QPushButton* botonRegistrar = new QPushButton("Registrar Nueva Sede");
+    QPushButton* botonEditar = new QPushButton("Editar Sede Seleccionada");
+    QPushButton* botonEliminar = new QPushButton("Eliminar Sede Seleccionada");
+    botonEditar->setObjectName("botonEditarSede");
+    botonEliminar->setObjectName("botonEliminarSede");
     QHBoxLayout* filaBoton = new QHBoxLayout();
     filaBoton->addWidget(botonRegistrar);
+    filaBoton->addWidget(botonEditar);
+    filaBoton->addWidget(botonEliminar);
     filaBoton->addStretch();
 
     tablaSedes = crearTabla({"Codigo", "Nombre", "Direccion", "Salas", "Telefono", "# Conexiones"});
@@ -119,6 +126,8 @@ PanelAdminSedes::PanelAdminSedes(GrafoSedes& grafoRef,
     layoutPrincipal->addWidget(pestanas);
 
     connect(botonRegistrar, &QPushButton::clicked, this, &PanelAdminSedes::onRegistrarSede);
+    connect(botonEditar, &QPushButton::clicked, this, &PanelAdminSedes::onEditarSede);
+    connect(botonEliminar, &QPushButton::clicked, this, &PanelAdminSedes::onEliminarSede);
     connect(botonVerPeliculas, &QPushButton::clicked, this, &PanelAdminSedes::onVerPeliculasPorSede);
     connect(campoCodigoSedeConsulta, &QLineEdit::returnPressed, this, &PanelAdminSedes::onVerPeliculasPorSede);
     connect(botonBfs, &QPushButton::clicked, this, &PanelAdminSedes::onBuscarCamino);
@@ -220,6 +229,99 @@ void PanelAdminSedes::onRegistrarSede() {
     QMessageBox::information(this, "Sede registrada",
         QString("La sede %1 se agrego al grafo como un vertice nuevo (sin conexiones todavia).")
             .arg(QString::fromStdString(codigo)));
+}
+
+std::string PanelAdminSedes::codigoSedeSeleccionada() const {
+    auto seleccion = tablaSedes->selectionModel()->selectedRows();
+    if (seleccion.isEmpty()) return "";
+    QTableWidgetItem* item = tablaSedes->item(seleccion.first().row(), 0);
+    return item != nullptr ? item->text().toStdString() : "";
+}
+
+void PanelAdminSedes::onEditarSede() {
+    std::string codigo = codigoSedeSeleccionada();
+    if (codigo.empty()) {
+        QMessageBox::information(this, "Sin seleccion", "Selecciona una sede de la tabla primero.");
+        return;
+    }
+    Sede* sede = grafo.buscarSede(codigo);
+    if (sede == nullptr) return;
+
+    QDialog dialogo(this);
+    dialogo.setWindowTitle("Editar Sede");
+    QFormLayout* formulario = new QFormLayout(&dialogo);
+
+    // El codigo no se puede cambiar: las funciones lo usan para referenciar la sede.
+    QLineEdit* campoCodigo = new QLineEdit(QString::fromStdString(sede->codigo));
+    campoCodigo->setReadOnly(true);
+    QLineEdit* campoNombre = new QLineEdit(QString::fromStdString(sede->nombre));
+    QLineEdit* campoDireccion = new QLineEdit(QString::fromStdString(sede->direccion));
+    QSpinBox* campoSalas = new QSpinBox();
+    campoSalas->setRange(1, 50);
+    campoSalas->setValue(sede->cantidadSalas);
+    QLineEdit* campoTelefono = new QLineEdit(QString::fromStdString(sede->telefono));
+
+    formulario->addRow("Codigo (no editable):", campoCodigo);
+    formulario->addRow("Nombre:", campoNombre);
+    formulario->addRow("Direccion:", campoDireccion);
+    formulario->addRow("Cantidad de salas:", campoSalas);
+    formulario->addRow("Telefono:", campoTelefono);
+
+    QDialogButtonBox* botones = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    formulario->addRow(botones);
+    connect(botones, &QDialogButtonBox::accepted, &dialogo, &QDialog::accept);
+    connect(botones, &QDialogButtonBox::rejected, &dialogo, &QDialog::reject);
+
+    if (dialogo.exec() != QDialog::Accepted) return;
+
+    std::string nombre = campoNombre->text().trimmed().toStdString();
+    std::string direccion = campoDireccion->text().trimmed().toStdString();
+    std::string telefono = campoTelefono->text().trimmed().toStdString();
+    if (nombre.empty() || direccion.empty() || telefono.empty()) {
+        QMessageBox::warning(this, "Datos incompletos", "Todos los campos son obligatorios.");
+        return;
+    }
+
+    grafo.editarSede(codigo, nombre, direccion, campoSalas->value(), telefono);
+    actualizarTablaSedes();
+    actualizarCombosSedes();
+    QMessageBox::information(this, "Sede actualizada",
+        QString("Los datos de la sede %1 se actualizaron.").arg(QString::fromStdString(codigo)));
+}
+
+void PanelAdminSedes::onEliminarSede() {
+    std::string codigo = codigoSedeSeleccionada();
+    if (codigo.empty()) {
+        QMessageBox::information(this, "Sin seleccion", "Selecciona una sede de la tabla primero.");
+        return;
+    }
+
+    // Funciones que se proyectan en esta sede: al desaparecer la sede
+    // no pueden quedar funciones apuntando a ella, asi que tambien se eliminan.
+    ArregloDinamico<Funcion> todas = funciones.listarFunciones(TipoRecorrido::INORDEN);
+    ArregloDinamico<std::string> codigosFunciones;
+    for (const Funcion& f : todas) {
+        if (f.codigoSede == codigo) codigosFunciones.agregarFinal(f.codigoFuncion);
+    }
+
+    QString mensaje = QString("Deseas eliminar la sede %1?\n\nSe quitaran tambien todas sus conexiones del grafo.")
+                          .arg(QString::fromStdString(codigo));
+    if (!codigosFunciones.estaVacio()) {
+        mensaje += QString("\n\nLa sede tiene %1 funcion(es) que tambien se eliminaran (con sus archivos de asientos).")
+                       .arg(codigosFunciones.getTamanio());
+    }
+    if (QMessageBox::question(this, "Confirmar eliminacion", mensaje) != QMessageBox::Yes) return;
+
+    for (const std::string& codigoFuncion : codigosFunciones) {
+        gestor.eliminarArchivoFuncion(codigoFuncion);
+        funciones.eliminar(codigoFuncion);
+    }
+    grafo.eliminarSede(codigo);
+
+    actualizarTablaSedes();
+    actualizarCombosSedes();
+    QMessageBox::information(this, "Sede eliminada",
+        QString("La sede %1 y sus conexiones se eliminaron del grafo.").arg(QString::fromStdString(codigo)));
 }
 
 void PanelAdminSedes::onVerPeliculasPorSede() {

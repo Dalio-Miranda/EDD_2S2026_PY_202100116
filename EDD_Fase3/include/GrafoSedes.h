@@ -67,6 +67,21 @@ public:
     bool agregarSede(const Sede& s);
 
     Sede* buscarSede(const std::string& codigo);
+
+    // Edita los datos de una sede existente. El CODIGO no cambia (las
+    // funciones lo referencian). Retorna false si la sede no existe.
+    bool editarSede(const std::string& codigo,
+                    const std::string& nombre,
+                    const std::string& direccion,
+                    int cantidadSalas,
+                    const std::string& telefono);
+
+    // Elimina una sede (vertice) y TODAS las aristas que la tocan: la
+    // arista de cada vecino hacia ella se quita de su lista de
+    // adyacencia antes de liberar el nodo. Las funciones de esa sede
+    // las maneja quien llama (ver PanelAdminSedes). Retorna false si
+    // no existe.
+    bool eliminarSede(const std::string& codigo);
     bool existeSede(const std::string& codigo) const;
     int getCantidadSedes() const;
 

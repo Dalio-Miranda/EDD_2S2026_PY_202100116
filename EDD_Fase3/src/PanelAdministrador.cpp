@@ -54,7 +54,7 @@ PanelAdministrador::PanelAdministrador(ArbolBinarioPeliculas& cartelera,
     pestanas->addTab(new PanelAdminFunciones(matrizAsientos, cartelera), "Funciones y Asientos (Fase 1)");
     pestanas->addTab(new PanelAdminFunciones2(arbolFunciones, cartelera, gestorAsientos, tablaReservas, arbolClientes, grafoSedes), "Funciones (Fase 2)");
     pestanas->addTab(new PanelAdminClientes(arbolClientes, tablaReservas), "Clientes");
-    pestanas->addTab(new PanelAdminSedes(grafoSedes, arbolFunciones, cartelera), "Sedes (Fase 3)");
+    pestanas->addTab(new PanelAdminSedes(grafoSedes, arbolFunciones, cartelera, gestorAsientos), "Sedes (Fase 3)");
     pestanas->addTab(new PanelAdminBlockchain(blockchain), "Blockchain (Fase 3)");
     pestanas->addTab(new PanelReportes(cartelera, solicitudes, promociones, matrizAsientos,
                                         arbolFunciones, arbolClientes, tablaReservas, gestorAsientos,

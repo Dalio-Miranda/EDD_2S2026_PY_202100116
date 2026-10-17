@@ -9,11 +9,12 @@
 #include "GrafoSedes.h"
 #include "ArbolAVLFunciones.h"
 #include "ArbolBinarioPeliculas.h"
+#include "GestorAsientosPorFuncion.h"
 
 // Pestana del administrador con las funcionalidades exclusivas del
 // grafo no dirigido ponderado (enunciado Fase 3, "Funciones de
 // Administrador", punto 2):
-//   a. Registrar nueva sede
+//   a. Registrar / editar nueva sede, y eliminar una sede
 //   c. Ver peliculas por sede
 //   d. Buscar camino mas corto entre dos sedes (BFS)
 //   e. Ver sedes con mayor relacion (ranking de aristas)
@@ -26,6 +27,7 @@ public:
     PanelAdminSedes(GrafoSedes& grafoRef,
                     ArbolAVLFunciones& funcionesRef,
                     ArbolBinarioPeliculas& carteleraRef,
+                    GestorAsientosPorFuncion& gestorRef,
                     QWidget* parent = nullptr);
 
 protected:
@@ -33,6 +35,8 @@ protected:
 
 private slots:
     void onRegistrarSede();
+    void onEditarSede();
+    void onEliminarSede();
     void onVerPeliculasPorSede();
     void onBuscarCamino();
     void onGenerarRanking();
@@ -41,6 +45,7 @@ private:
     GrafoSedes& grafo;
     ArbolAVLFunciones& funciones;
     ArbolBinarioPeliculas& cartelera;
+    GestorAsientosPorFuncion& gestor;
 
     QTableWidget* tablaSedes;
 
@@ -54,6 +59,7 @@ private:
 
     QTableWidget* tablaRanking;
 
+    std::string codigoSedeSeleccionada() const;
     void actualizarTablaSedes();
     void actualizarCombosSedes();
 };
