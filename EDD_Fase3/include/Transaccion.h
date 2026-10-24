@@ -18,6 +18,11 @@ struct Transaccion {
     double monto = 0.0;
     std::string metodoPago; // "Tarjeta" o "Efectivo"
     std::string fechaPago;  // formato DD-MM-AAAA
+    // "PAGADA" (compra normal) o "CANCELADA". Una cancelacion NO modifica
+    // el bloque donde quedo la compra (los bloques son inmutables): se
+    // registra como una transaccion NUEVA, con el mismo codigo de
+    // transaccion y estado CANCELADA, que viaja en un bloque posterior.
+    std::string estado = "PAGADA";
 
     Transaccion() = default;
 

@@ -182,6 +182,12 @@ void Blockchain::reconstruirTablaHash(TablaHashReservas& tabla) const {
             if (fechaReserva.size() == 10 && fechaReserva[2] == '-' && fechaReserva[5] == '-') {
                 fechaReserva = fechaReserva.substr(6, 4) + "-" + fechaReserva.substr(3, 2) + "-" + fechaReserva.substr(0, 2);
             }
+            if (t.estado == "CANCELADA") {
+                // La cancelacion siempre va en un bloque posterior al pago,
+                // asi que la reserva ya se inserto: se retira de la tabla.
+                tabla.eliminar(t.codigoReserva);
+                continue;
+            }
             Reserva r(t.codigoReserva, t.codigoFuncion, t.idCliente, t.fila, t.columna, fechaReserva);
             tabla.insertar(r);
         }
@@ -200,12 +206,15 @@ ArregloDinamico<Transaccion> Blockchain::historialDeCliente(const std::string& i
     return resultado;
 }
 
-Blockchain::Comprobante Blockchain::buscarTransaccion(const std::string& codigoTransaccion) const {
+Blockchain::Comprobante Blockchain::buscarTransaccion(const std::string& codigoTransaccion, const std::string& estado) const {
     Comprobante resultado;
 
     for (NodoBloque* n = cabeza; n != nullptr; n = n->siguiente) {
-        for (int i = 0; i < n->dato.data.getTamanio(); i++) {
-            if (n->dato.data[i].codigoTransaccion == codigoTransaccion) {
+        // De atras hacia adelante: si el mismo codigo aparece pagado y
+        // cancelado en un mismo bloque, gana el registro mas reciente.
+        for (int i = n->dato.data.getTamanio() - 1; i >= 0; i--) {
+            if (n->dato.data[i].codigoTransaccion == codigoTransaccion &&
+                (estado.empty() || n->dato.data[i].estado == estado)) {
                 resultado.encontrado = true;
                 resultado.transaccion = n->dato.data[i];
                 resultado.indiceBloque = n->dato.index;
@@ -218,13 +227,35 @@ Blockchain::Comprobante Blockchain::buscarTransaccion(const std::string& codigoT
     return resultado;
 }
 
+bool Blockchain::buscarPagoDeReserva(const std::string& codigoReserva, Transaccion& salida) const {
+    for (int i = pendientes.getTamanio() - 1; i >= 0; i--) {
+        if (pendientes[i].codigoReserva == codigoReserva && pendientes[i].estado != "CANCELADA") {
+            salida = pendientes[i];
+            return true;
+        }
+    }
+    for (NodoBloque* n = cabeza; n != nullptr; n = n->siguiente) {
+        for (int i = n->dato.data.getTamanio() - 1; i >= 0; i--) {
+            const Transaccion& t = n->dato.data[i];
+            if (t.codigoReserva == codigoReserva && t.estado != "CANCELADA") {
+                salida = t;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 Blockchain::ResumenVentas Blockchain::calcularVentasTotales() const {
     ResumenVentas resumen;
 
     for (NodoBloque* n = cabeza; n != nullptr; n = n->siguiente) {
         for (int i = 0; i < n->dato.data.getTamanio(); i++) {
-            resumen.totalBoletos++;
-            resumen.montoTotal += n->dato.data[i].monto;
+            // Una transaccion CANCELADA anula la compra original (mismo
+            // monto), por eso resta en vez de sumar.
+            int signo = (n->dato.data[i].estado == "CANCELADA") ? -1 : 1;
+            resumen.totalBoletos += signo;
+            resumen.montoTotal += signo * n->dato.data[i].monto;
         }
     }
 
@@ -298,8 +329,9 @@ ArregloDinamico<Blockchain::LineaDesglose> Blockchain::desglosar(bool porFuncion
                 lineas.agregarFinal(nueva);
                 pos = lineas.getTamanio() - 1;
             }
-            lineas[pos].boletos++;
-            lineas[pos].monto += t.monto;
+            int signo = (t.estado == "CANCELADA") ? -1 : 1;
+            lineas[pos].boletos += signo;
+            lineas[pos].monto += signo * t.monto;
         }
     }
 

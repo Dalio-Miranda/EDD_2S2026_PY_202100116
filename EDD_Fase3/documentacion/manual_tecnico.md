@@ -208,6 +208,8 @@ Estructura en memoria → recorrido → texto en una variable (std::string) → 
 
 Se usa **preorden** para que, al reinsertar en ese orden, el árbol conserve su forma.
 
+Cada función se guarda con su `codigo_pelicula` explícito, porque en la carga masiva la función va anidada dentro de su película y su JSON normal no incluye ese dato. Sin él, al reabrir el programa las funciones quedarían sin película y las aristas del grafo se calcularían mal.
+
 ### 8.2 Flujo de carga (al iniciar)
 
 1. Se leen los tres archivos y se descomprimen con LZW.
@@ -252,7 +254,8 @@ El grafo usa `graph` con aristas `--` (no dirigido) y la disposición `circo`. C
 
 - **Precio del boleto:** constante del sistema de **Q 45.00** por boleto (confirmado por el auxiliar en el foro).
 - **Ventas totales:** se suma el `DATA` de **todos** los bloques válidos.
-- **Reservas canceladas:** la pestaña de cancelación actúa sobre la tabla hash y la matriz de asientos; una compra ya registrada en un bloque **no se modifica**, porque la blockchain es inmutable.
+- **Reservas canceladas:** el bloque donde quedó la compra **no se modifica** (la blockchain es inmutable). Al cancelar se libera el asiento, se retira la reserva de la tabla hash y se registra una **transacción nueva** con el mismo `codigo_transaccion` y `"estado": "CANCELADA"`, que viaja en un bloque posterior (criterio confirmado por el auxiliar: ej. T003 PAGADA en el bloque 2 y T003 CANCELADA en el bloque 3). Las ventas totales restan las canceladas; al reiniciar, la tabla hash se reconstruye aplicando las cancelaciones en orden. El campo `estado` es opcional al leer JSON (por defecto PAGADA) y solo entra al hash de la hoja de Merkle cuando es CANCELADA.
+- **DATA del bloque:** cada bloque guarda únicamente sus propias transacciones (ej. bloque 2 con las 1-8, bloque 3 con las 9-28), tal como lo muestra el diagrama del auxiliar.
 - **Credenciales del administrador:** `AdminCine@gmail.com` / `admin123Pass`, definidas en el enunciado.
 - **Interfaz:** de escritorio con Qt; la mención a "interfaz web" del enunciado es opcional para esta sección (confirmado con el auxiliar).
 

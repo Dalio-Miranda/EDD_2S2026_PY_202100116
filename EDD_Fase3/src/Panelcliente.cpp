@@ -226,7 +226,7 @@ void PanelCliente::construirPaginaSesion() {
     pestanas->addTab(new PanelClienteMiPerfil(clientes, idClienteActual), "Mi Perfil");
     pestanas->addTab(new PanelClienteReservar2(cartelera, funciones, gestor, reservas, clientes, grafo, blockchain, idClienteActual), "Reservar");
     pestanas->addTab(new PanelClienteHistorial2(blockchain, funciones, idClienteActual), "Mis Compras");
-    pestanas->addTab(new PanelClienteCancelarReserva2(clientes, reservas, funciones, gestor, idClienteActual), "Cancelar Reserva");
+    pestanas->addTab(new PanelClienteCancelarReserva2(clientes, reservas, funciones, gestor, blockchain, idClienteActual), "Cancelar Reserva");
     pestanas->addTab(new PanelClientePromociones(promociones), "Promociones");
     pestanas->addTab(new PanelClienteSolicitudes(solicitudes), "Solicitudes");
     pestanas->addTab(new PanelClienteAsientos(matrizAsientos), "Reservar (Fase 1)");

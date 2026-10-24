@@ -13,10 +13,11 @@ PanelClienteCancelarReserva2::PanelClienteCancelarReserva2(ArbolBClientes& clien
                                                             TablaHashReservas& reservasRef,
                                                             ArbolAVLFunciones& funcionesRef,
                                                             GestorAsientosPorFuncion& gestorRef,
+                                                            Blockchain& blockchainRef,
                                                             std::string idClienteRef,
                                                             QWidget* parent)
     : QWidget(parent), clientes(clientesRef), reservas(reservasRef), funciones(funcionesRef),
-      gestor(gestorRef), idCliente(std::move(idClienteRef)) {
+      gestor(gestorRef), blockchain(blockchainRef), idCliente(std::move(idClienteRef)) {
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addWidget(new QLabel("Cancelar una Reserva"));
@@ -94,6 +95,21 @@ void PanelClienteCancelarReserva2::onCancelarSeleccionada() {
     bool ok = gestor.cargarFuncion(codigoFuncion, funciones);
     if (ok) {
         gestor.cancelarAsiento(filaAsiento, columnaAsiento);
+    }
+
+    // La compra ya esta (o esta por estar) en la blockchain y un bloque no
+    // se puede modificar: la cancelacion se registra como una transaccion
+    // NUEVA (mismo codigo de transaccion, estado CANCELADA).
+    Transaccion pago;
+    bool habiaPago = blockchain.buscarPagoDeReserva(codigo, pago);
+    if (habiaPago) {
+        std::string hoy = PersistenciaJSON::fechaHoy(); // AAAA-MM-DD
+        Transaccion cancelacion = pago;
+        cancelacion.estado = "CANCELADA";
+        if (hoy.size() == 10) {
+            cancelacion.fechaPago = hoy.substr(8, 2) + "-" + hoy.substr(5, 2) + "-" + hoy.substr(0, 4);
+        }
+        blockchain.agregarTransaccionPendiente(cancelacion);
     }
 
     reservas.eliminar(codigo);

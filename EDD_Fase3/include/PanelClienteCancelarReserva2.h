@@ -8,6 +8,7 @@
 #include "TablaHashReservas.h"
 #include "ArbolAVLFunciones.h"
 #include "GestorAsientosPorFuncion.h"
+#include "Blockchain.h"
 
 class PanelClienteCancelarReserva2 : public QWidget {
     Q_OBJECT
@@ -17,6 +18,7 @@ public:
                                   TablaHashReservas& reservasRef,
                                   ArbolAVLFunciones& funcionesRef,
                                   GestorAsientosPorFuncion& gestorRef,
+                                  Blockchain& blockchainRef,
                                   std::string idClienteRef,
                                   QWidget* parent = nullptr);
 
@@ -31,6 +33,7 @@ private:
     TablaHashReservas& reservas;
     ArbolAVLFunciones& funciones;
     GestorAsientosPorFuncion& gestor;
+    Blockchain& blockchain;
     std::string idCliente;
 
     QTableWidget* tabla;

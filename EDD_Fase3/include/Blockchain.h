@@ -132,7 +132,12 @@ public:
         int indiceBloque = -1;
         std::string hashBloque;
     };
-    Comprobante buscarTransaccion(const std::string& codigoTransaccion) const;
+    Comprobante buscarTransaccion(const std::string& codigoTransaccion, const std::string& estado = "") const;
+
+    // Busca la transaccion PAGADA de una reserva (primero entre las
+    // pendientes, luego en la cadena). Sirve para registrar su
+    // cancelacion como una transaccion nueva.
+    bool buscarPagoDeReserva(const std::string& codigoReserva, Transaccion& salida) const;
 
     // Resumen de ventas totales, recorriendo el DATA de TODOS los
     // bloques validos de la cadena.

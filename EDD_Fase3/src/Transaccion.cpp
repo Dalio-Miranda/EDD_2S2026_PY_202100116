@@ -5,6 +5,9 @@ std::string Transaccion::aTexto() const {
     std::ostringstream oss;
     oss << codigoTransaccion << codigoReserva << idCliente << codigoFuncion
         << fila << columna << monto << metodoPago << fechaPago;
+    // El estado solo entra al texto cuando es CANCELADA, asi el hash de
+    // las compras normales no cambia respecto a bloques ya existentes.
+    if (estado == "CANCELADA") oss << estado;
     return oss.str();
 }
 
@@ -18,7 +21,8 @@ void to_json(nlohmann::json& j, const Transaccion& t) {
         {"columna", t.columna},
         {"monto", t.monto},
         {"metodo_pago", t.metodoPago},
-        {"fecha_pago", t.fechaPago}
+        {"fecha_pago", t.fechaPago},
+        {"estado", t.estado}
     };
 }
 
@@ -32,4 +36,6 @@ void from_json(const nlohmann::json& j, Transaccion& t) {
     j.at("monto").get_to(t.monto);
     j.at("metodo_pago").get_to(t.metodoPago);
     j.at("fecha_pago").get_to(t.fechaPago);
+    // Opcional: los JSON anteriores no traen "estado" (= compra PAGADA).
+    t.estado = j.value("estado", std::string("PAGADA"));
 }

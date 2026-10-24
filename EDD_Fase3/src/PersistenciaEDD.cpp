@@ -85,6 +85,11 @@ std::string PersistenciaEDD::serializarFunciones(const ArbolAVLFunciones& funcio
     for (int i = 0; i < lista.getTamanio(); i++) {
         json jf;
         to_json(jf, lista[i]);
+        // El JSON de una Funcion NO incluye su pelicula (en la carga masiva
+        // la funcion viene anidada dentro de la pelicula), asi que aqui se
+        // guarda explicitamente: sin este campo, al reabrir el programa las
+        // funciones quedarian sin pelicula y el grafo se calcularia mal.
+        jf["codigo_pelicula"] = lista[i].codigoPelicula;
         arreglo.push_back(jf);
     }
     json raiz;
@@ -159,6 +164,7 @@ bool PersistenciaEDD::cargarTodo(const std::string& carpeta,
         try {
             Funcion f;
             from_json(jf, f);
+            f.codigoPelicula = jf.at("codigo_pelicula").get<std::string>();
             funciones.insertar(f);
         } catch (const std::exception&) { /* se omite */ }
     }

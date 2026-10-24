@@ -79,7 +79,7 @@ void PanelClienteHistorial2::actualizarTabla() {
 
         QString registro = "Pendiente de bloque";
         if (!esPendiente) {
-            Blockchain::Comprobante comp = blockchain.buscarTransaccion(t.codigoTransaccion);
+            Blockchain::Comprobante comp = blockchain.buscarTransaccion(t.codigoTransaccion, t.estado);
             registro = QString("Bloque #%1").arg(comp.indiceBloque);
         }
 
@@ -89,6 +89,8 @@ void PanelClienteHistorial2::actualizarTabla() {
         if (f != nullptr && !f->fecha.empty()) {
             estado = (f->fecha < hoy) ? "VENCIDA" : "VALIDA";
         }
+        // Las transacciones de cancelacion se muestran como CANCELADA.
+        if (t.estado == "CANCELADA") estado = "CANCELADA";
 
         tabla->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(t.codigoTransaccion)));
         tabla->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(t.codigoReserva)));
@@ -135,6 +137,7 @@ void PanelClienteHistorial2::onVerComprobante() {
             "Monto:         Q %7\n"
             "Metodo de pago: %8\n"
             "Fecha de pago: %9\n"
+            "Estado:        %12\n"
             "------------------------------------------\n"
             "Registrada en el bloque (INDEX): %10\n"
             "HASH del bloque: %11\n\n"
@@ -148,7 +151,8 @@ void PanelClienteHistorial2::onVerComprobante() {
             .arg(QString::fromStdString(t.metodoPago))
             .arg(QString::fromStdString(t.fechaPago))
             .arg(comp.indiceBloque)
-            .arg(QString::fromStdString(comp.hashBloque)));
+            .arg(QString::fromStdString(comp.hashBloque))
+            .arg(QString::fromStdString(t.estado)));
         return;
     }
 

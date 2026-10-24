@@ -51,6 +51,10 @@ Ir a la pestaña **Sedes (Fase 3)**. Tiene cuatro secciones:
 - **Editar Sede Seleccionada:** seleccioná una fila de la tabla y presioná el botón para cambiar nombre, dirección, salas o teléfono. El código no se puede cambiar.
 - **Eliminar Sede Seleccionada:** seleccioná una fila y presioná el botón. El sistema pide confirmación y quita la sede y todas sus conexiones del grafo. Si la sede tiene funciones, **también se eliminan** (con sus archivos de asientos), y el aviso te dice cuántas son.
 
+![Editar sede](capturas/03b_admin_sedes_editar.png)
+
+![Eliminar sede](capturas/03c_admin_sedes_eliminar.png)
+
 ![Lista de sedes](capturas/02_admin_sedes_lista.png)
 
 ![Registrar nueva sede](capturas/03_admin_sedes_registrar.png)
@@ -168,3 +172,7 @@ Al cerrar la ventana, el sistema genera un bloque con las compras pendientes (si
 | Las funciones de un JSON no aparecen | Cada función debe traer `sede` y `fecha`; revisar el detalle del cuadro de resultado |
 | El programa se cierra al abrirlo | Faltan las DLL de Qt; ejecutar `windeployqt --compiler-runtime CinemaUSAC_Fase3.exe` en `build/` |
 | Un reporte dice que no se ha generado | Presionar **Generar / Actualizar este reporte**; requiere Graphviz instalado (`dot` en el PATH) |
+
+## Cancelar una reserva
+
+En la pestaña **Cancelar Reserva** se elige la reserva y se confirma. El asiento queda libre y, en **Mis Compras**, aparece una fila nueva con la misma transacción en estado **CANCELADA**. La compra original no se borra: queda en su bloque, y la cancelación se registra en un bloque posterior.
